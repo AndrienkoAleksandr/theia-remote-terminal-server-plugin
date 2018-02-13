@@ -7,7 +7,7 @@
 
 import { inject, injectable } from "inversify";
 import { Disposable, ILogger } from '@theia/core/lib/common';
-import { Widget, BaseWidget, Message,  Endpoint } from '@theia/core/lib/browser'; // WebSocketConnectionProvider, StatefulWidget
+import { Widget, BaseWidget, Message,  Endpoint, WebSocketConnectionProvider } from '@theia/core/lib/browser'; // WebSocketConnectionProvider, StatefulWidget
 // import { IShellTerminalServer } from '../common/shell-terminal-protocol';
 // import { ITerminalServer } from '../common/terminal-protocol';
 // import { IBaseTerminalErrorEvent, IBaseTerminalExitEvent } from '../common/base-terminal-protocol';
@@ -18,10 +18,10 @@ import { ThemeService } from "@theia/core/lib/browser/theming";
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/fit/fit'));
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/attach/attach'));
 
-export const TERMINAL_WIDGET_FACTORY_ID = 'terminal';
+export const REMOTE_TERMINAL_WIDGET_FACTORY_ID = 'remote-terminal';
 
-export const TerminalWidgetOptions = Symbol("TerminalWidgetOptions");
-export interface TerminalWidgetOptions {
+export const RemoteTerminalWidgetOptions = Symbol("TerminalWidgetOptions");
+export interface RemoteTerminalWidgetOptions {
     endpoint: Endpoint.Options,
     id: string,
     caption: string,
@@ -29,9 +29,9 @@ export interface TerminalWidgetOptions {
     destroyTermOnClose: boolean
 }
 
-export interface TerminalWidgetFactoryOptions extends Partial<TerminalWidgetOptions> {
+export interface RemoteTerminalWidgetFactoryOptions extends Partial<RemoteTerminalWidgetOptions> {
     /* a unique string per terminal */
-    created: string
+    created: string;
 }
 
 interface TerminalCSSProperties {
@@ -49,7 +49,7 @@ interface TerminalCSSProperties {
 }
 
 @injectable()
-export class TerminalWidget extends BaseWidget  { // implements StatefulWidget
+export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWidget
 
     private terminalId: number | undefined;
     private term: Xterm.Terminal;
@@ -58,7 +58,7 @@ export class TerminalWidget extends BaseWidget  { // implements StatefulWidget
     // private endpoint: Endpoint;
     protected restored = false;
     protected closeOnDispose = true;
-    protected waitForStarted: Promise<void>;
+    // protected waitForStarted: Promise<void>;
     // protected started: Function;
     protected openAfterShow = false;
     protected isOpeningTerm = false;
@@ -66,8 +66,8 @@ export class TerminalWidget extends BaseWidget  { // implements StatefulWidget
 
     constructor(
         // @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
-        // @inject(WebSocketConnectionProvider) protected readonly webSocketConnectionProvider: WebSocketConnectionProvider,
-        @inject(TerminalWidgetOptions) options: TerminalWidgetOptions,
+        @inject(WebSocketConnectionProvider) protected readonly webSocketConnectionProvider: WebSocketConnectionProvider,
+        @inject(RemoteTerminalWidgetOptions) protected readonly options: RemoteTerminalWidgetOptions,
         // @inject(IShellTerminalServer) protected readonly shellTerminalServer: ITerminalServer,
         // @inject(TerminalWatcher) protected readonly terminalWatcher: TerminalWatcher,
         @inject(ILogger) protected readonly logger: ILogger
@@ -79,9 +79,9 @@ export class TerminalWidget extends BaseWidget  { // implements StatefulWidget
         this.title.label = options.label;
         this.title.iconClass = "fa fa-terminal";
 
-        this.waitForStarted = new Promise(resolve => {
-            // this.started = resolve;
-        });
+        // this.waitForStarted = new Promise(resolve => {
+        //     this.started = resolve;
+        // });
 
         if (options.destroyTermOnClose === true) {
             this.toDispose.push(Disposable.create(() =>
@@ -248,14 +248,14 @@ export class TerminalWidget extends BaseWidget  { // implements StatefulWidget
         }
 
         /* Wait for the backend terminal to be requested before opening the xterm terminal.  */
-        await this.waitForStarted;
+        // await this.waitForStarted;
 
-        if (this.terminalId === undefined) {
-            /* Don't retry to open, something is permanently wrong.  */
-            this.isOpeningTerm = false;
-            this.isTermOpen = true;
-            return Promise.reject("No terminal");
-        }
+        // if (this.terminalId === undefined) {
+        //     /* Don't retry to open, something is permanently wrong.  */
+        //     this.isOpeningTerm = false;
+        //     this.isTermOpen = true;
+        //     return Promise.reject("No terminal");
+        // }
 
         /* This may have changed since we waited for waitForStarted. Test it again.  */
         if (this.isVisible === false) {
@@ -263,18 +263,21 @@ export class TerminalWidget extends BaseWidget  { // implements StatefulWidget
             return Promise.reject("Not visible");
         }
 
+        this.terminalId = 0;
         this.term.open(this.node);
         this.registerResize();
-        // this.connectSocket(this.terminalId);
+        this.connectSocket(this.terminalId);
         this.monitorTerminal(this.terminalId);
 
         this.isTermOpen = true;
         return Promise.resolve();
     }
-    // protected createWebSocket(pid: string): WebSocket {
-    //     const url = this.endpoint.getWebSocketUrl().resolve(pid);
-    //     return this.webSocketConnectionProvider.createWebSocket(url.toString(), { reconnecting: false });
-    // }
+
+    protected createWebSocket(pid: string): WebSocket {
+        // const url = this.endpoint.getWebSocketUrl().resolve(pid);
+        const url = this.options.endpoint; // "ws://172.19.20.22:32811/pty";
+        return this.webSocketConnectionProvider.createWebSocket(url.toString(), { reconnecting: false });
+    }
 
     protected onActivateRequest(msg: Message): void {
         super.onActivateRequest(msg);
@@ -312,6 +315,7 @@ export class TerminalWidget extends BaseWidget  { // implements StatefulWidget
             this.openAfterShow = true;
         }
     }
+
     private resizeTimer: any;
 
     protected onResize(msg: Widget.ResizeMessage): void {
@@ -338,20 +342,31 @@ export class TerminalWidget extends BaseWidget  { // implements StatefulWidget
         // }));
     }
 
-    // protected connectSocket(id: number) {
-    //     const socket = this.createWebSocket(id.toString());
-    //     socket.onopen = () => {
-    //         (this.term as any).attach(socket);
-    //         (this.term as any)._initialized = true;
-    //     };
+    protected connectSocket(id: number) {
+        const socket = this.createWebSocket(id.toString()); 
 
-    //     socket.onerror = err => {
-    //         console.error(err);
-    //     };
-    //     this.toDispose.push(Disposable.create(() =>
-    //         socket.close()
-    //     ));
-    // }
+        socket.onopen = () => {
+            this.term.on("data", data => {
+                socket.send(JSON.stringify({"type": "data", "data": data}))
+            });
+        };
+
+        socket.onmessage = ev => {
+            this.term.write(ev.data);
+        };
+
+        socket.onerror = err => {
+            console.error(err);
+        };
+
+        socket.onclose = (ev) => {
+            this.close();
+        }
+
+        this.toDispose.push(Disposable.create(() =>
+            socket.close()
+        ));
+    }
 
     dispose(): void {
 
