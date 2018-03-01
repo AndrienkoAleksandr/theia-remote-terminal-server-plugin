@@ -14,6 +14,7 @@ import { Widget, BaseWidget, Message,  Endpoint, WebSocketConnectionProvider } f
 // import { TerminalWatcher } from '../common/terminal-watcher';
 import * as Xterm from 'xterm';
 import { ThemeService } from "@theia/core/lib/browser/theming";
+import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
 
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/fit/fit'));
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/attach/attach'));
@@ -68,6 +69,7 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
         // @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(WebSocketConnectionProvider) protected readonly webSocketConnectionProvider: WebSocketConnectionProvider,
         @inject(RemoteTerminalWidgetOptions) protected readonly options: RemoteTerminalWidgetOptions,
+        @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
         // @inject(IShellTerminalServer) protected readonly shellTerminalServer: ITerminalServer,
         // @inject(TerminalWatcher) protected readonly terminalWatcher: TerminalWatcher,
         @inject(ILogger) protected readonly logger: ILogger
@@ -275,8 +277,18 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
 
     protected createWebSocket(pid: string): WebSocket {
         // const url = this.endpoint.getWebSocketUrl().resolve(pid);
-        const url = this.options.endpoint; // "ws://172.19.20.22:32811/pty";
-        return this.webSocketConnectionProvider.createWebSocket(url.toString(), { reconnecting: false });
+        //const url = this.options.endpoint; // "ws://172.19.20.22:32811/pty";
+
+        let port = "9999"; //"9999";
+        // let containerId = "daef4f611f1d";
+        let cmd = "/bin/bash";
+        let machineName = "dev-machine";
+        // todo real !
+        let workspaceId = "workspacek3n7f89x6ie4cr0j";
+        let url = "ws://" + "172.19.20.22:" + port + "/" + "exec/" + workspaceId + "/" + machineName + "?cmd=" + window.btoa(cmd);
+        console.log("url "  + url);
+
+        return new WebSocket(url.toString()); //this.webSocketConnectionProvider.createWebSocket(url.toString(), { reconnecting: false });
     }
 
     protected onActivateRequest(msg: Message): void {
@@ -343,15 +355,20 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
     }
 
     protected connectSocket(id: number) {
+        console.log("try to connect!!!!");
         const socket = this.createWebSocket(id.toString()); 
+        console.log("socket !!!!!");
 
         socket.onopen = () => {
+            console.log("open!!!!")
             this.term.on("data", data => {
-                socket.send(JSON.stringify({"type": "data", "data": data}))
+                //socket.send(JSON.stringify({"type": "data", "data": data}))
+                socket.send(data);
             });
         };
 
         socket.onmessage = ev => {
+            console.log(ev.data);
             this.term.write(ev.data);
         };
 

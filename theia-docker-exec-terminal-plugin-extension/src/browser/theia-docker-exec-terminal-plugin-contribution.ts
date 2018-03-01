@@ -7,7 +7,6 @@ export const NewRemoteTerminal = {
     id: 'NewRemoteTerminal',
     label: 'New remote terminal'
 }
-
 @injectable()
 export class TheiaDockerExecTerminalPluginCommandContribution implements CommandContribution {
 

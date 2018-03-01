@@ -11,8 +11,10 @@
   "dependencies": {
     "@theia/core": "latest",
     "@theia/terminal": "latest",
+    "env-variables-extension": "latest",
     "xterm": "^3.0.1"
   },
+  "license": "Apache-2.0",
   "devDependencies": {
     "rimraf": "latest",
     "typescript": "latest"
