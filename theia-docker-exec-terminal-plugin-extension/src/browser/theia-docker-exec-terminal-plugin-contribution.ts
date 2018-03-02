@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { CommandContribution, CommandRegistry, MenuContribution, MenuModelRegistry } from "@theia/core/lib/common";
-import { CommonMenus, SingleTextInputDialog, WidgetManager } from "@theia/core/lib/browser";
+import { CommonMenus, WidgetManager } from "@theia/core/lib/browser";
 import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidgetFactoryOptions } from "./remote-terminal-widget";
 
 export const NewRemoteTerminal = {
@@ -17,15 +17,8 @@ export class TheiaDockerExecTerminalPluginCommandContribution implements Command
     registerCommands(registry: CommandRegistry): void {
         registry.registerCommand(NewRemoteTerminal, {
             execute: () => { 
-                console.log("new remote terminal");
-                const dialog = new SingleTextInputDialog({
-                    title: `New Remote Terminal`,
-                    initialValue: '',
-                    // validate: name => this.validateFileName(name, parent)
-                });
-                dialog.open().then(endpoint => {
-                    this.newRemoteTerminal(endpoint);
-                });
+                console.log("Create new remote terminal");
+                this.newRemoteTerminal("");
             }
         }); 
     }

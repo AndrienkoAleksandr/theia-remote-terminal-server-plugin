@@ -16,7 +16,8 @@
     "@theia/monaco": "latest",
     "@theia/typescript": "latest",
     "@theia/messages": "latest",
-    "theia-docker-exec-terminal-plugin-extension": "0.0.0"
+    "theia-docker-exec-terminal-plugin-extension": "0.0.0",
+    "env-variables-extension": "latest"
   },
   "devDependencies": {
     "@theia/cli": "latest"

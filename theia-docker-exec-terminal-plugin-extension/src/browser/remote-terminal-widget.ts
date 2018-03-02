@@ -206,6 +206,7 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
 
             this.cols = size.cols;
             this.rows = size.rows;
+            // Todo implement resize!!!
             //this.shellTerminalServer.resize(this.terminalId, this.cols, this.rows);
         });
         (this.term as any).fit();
@@ -275,20 +276,19 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
         return Promise.resolve();
     }
 
-    protected createWebSocket(pid: string): WebSocket {
+    protected async createWebSocket(pid: string): Promise<WebSocket> {
         // const url = this.endpoint.getWebSocketUrl().resolve(pid);
         //const url = this.options.endpoint; // "ws://172.19.20.22:32811/pty";
 
-        let port = "9999"; //"9999";
-        // let containerId = "daef4f611f1d";
+        let port = "9999";
         let cmd = "/bin/bash";
         let machineName = "dev-machine";
-        // todo real !
-        let workspaceId = "workspacek3n7f89x6ie4cr0j";
-        let url = "ws://" + "172.19.20.22:" + port + "/" + "exec/" + workspaceId + "/" + machineName + "?cmd=" + window.btoa(cmd);
-        console.log("url "  + url);
 
-        return new WebSocket(url.toString()); //this.webSocketConnectionProvider.createWebSocket(url.toString(), { reconnecting: false });
+        let workspaceId:string = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
+
+        let url = "ws://" + "172.19.20.22:" + port + "/" + "exec/" + workspaceId + "/" + machineName + "?cmd=" + window.btoa(cmd);
+
+        return this.webSocketConnectionProvider.createWebSocket(url.toString(), { reconnecting: false }); 
     }
 
     protected onActivateRequest(msg: Message): void {
@@ -354,9 +354,9 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
         // }));
     }
 
-    protected connectSocket(id: number) {
+    protected async connectSocket(id: number) {
         console.log("try to connect!!!!");
-        const socket = this.createWebSocket(id.toString()); 
+        const socket = await this.createWebSocket(id.toString()); 
         console.log("socket !!!!!");
 
         socket.onopen = () => {
