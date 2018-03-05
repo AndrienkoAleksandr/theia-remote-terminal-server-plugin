@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "browser-app",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "dependencies": {
     "@theia/core": "latest",
     "@theia/editor": "latest",
@@ -13,11 +13,10 @@
     "@theia/navigator": "latest",
     "@theia/preferences": "latest",
     "@theia/process": "latest",
-    "@theia/terminal": "latest",
     "@theia/typescript": "latest",
     "@theia/workspace": "latest",
     "env-variables-extension": "latest",
-    "theia-docker-exec-terminal-plugin-extension": "^0.0.1"
+    "theia-docker-exec-terminal-plugin-extension": "^0.0.2"
   },
   "devDependencies": {
     "@theia/cli": "latest"

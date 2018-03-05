@@ -23,6 +23,7 @@ export const REMOTE_TERMINAL_WIDGET_FACTORY_ID = 'remote-terminal';
 
 export const RemoteTerminalWidgetOptions = Symbol("TerminalWidgetOptions");
 export interface RemoteTerminalWidgetOptions {
+    machineName: string,
     endpoint: Endpoint.Options,
     id: string,
     caption: string,
@@ -56,6 +57,7 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
     private term: Xterm.Terminal;
     private cols: number = 80;
     private rows: number = 40;
+    private machineName = "dev-machine";
     // private endpoint: Endpoint;
     protected restored = false;
     protected closeOnDispose = true;
@@ -76,6 +78,7 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
     ) {
         super();
         // this.endpoint = new Endpoint(options.endpoint);
+        this.machineName = options.machineName;
         this.id = options.id;
         this.title.caption = options.caption;
         this.title.label = options.label;
@@ -282,7 +285,7 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
 
         let port = "9999";
         let cmd = "/bin/bash";
-        let machineName = "dev-machine";
+        let machineName = this.machineName;
 
         let workspaceId:string = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
 

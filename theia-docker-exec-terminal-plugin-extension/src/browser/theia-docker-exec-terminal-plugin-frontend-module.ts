@@ -7,11 +7,17 @@ import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminal
 
 import { ContainerModule, Container } from "inversify";
 import { WidgetFactory, ApplicationShell } from '@theia/core/lib/browser';
+import { TerminalQuickOpenService } from "./terminal-quick-open"
+
+import '../../src/browser/terminal.css';
+import 'xterm/lib/xterm.css';
 
 export default new ContainerModule(bind => {
 
     bind(CommandContribution).to(TheiaDockerExecTerminalPluginCommandContribution);
     bind(MenuContribution).to(TheiaDockerExecTerminalPluginMenuContribution);
+
+    bind(TerminalQuickOpenService).toSelf();
 
     bind(RemoteTerminalWidget).toSelf().inTransientScope();
 
