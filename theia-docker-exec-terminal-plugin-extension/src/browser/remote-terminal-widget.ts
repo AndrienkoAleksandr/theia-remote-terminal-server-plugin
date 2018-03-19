@@ -14,7 +14,8 @@ import { Widget, BaseWidget, Message,  Endpoint, WebSocketConnectionProvider } f
 // import { TerminalWatcher } from '../common/terminal-watcher';
 import * as Xterm from 'xterm';
 import { ThemeService } from "@theia/core/lib/browser/theming";
-import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
+import { IBaseEnvVariablesServer } from "@oandriie/env-variables-extension/lib/common/base-env-variables-protocol";
+import { IBaseTerminalServer } from "../common/base-terminal-protocol";
 
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/fit/fit'));
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/attach/attach'));
@@ -72,6 +73,7 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
         @inject(WebSocketConnectionProvider) protected readonly webSocketConnectionProvider: WebSocketConnectionProvider,
         @inject(RemoteTerminalWidgetOptions) protected readonly options: RemoteTerminalWidgetOptions,
         @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
+        @inject(IBaseTerminalServer) protected readonly termServer: IBaseTerminalServer,
         // @inject(IShellTerminalServer) protected readonly shellTerminalServer: ITerminalServer,
         // @inject(TerminalWatcher) protected readonly terminalWatcher: TerminalWatcher,
         @inject(ILogger) protected readonly logger: ILogger
@@ -221,15 +223,17 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
      * If id is provided attach to the terminal for this id.
      */
     public async start(id?: number): Promise<void> {
-        // if (id === undefined) {
-        //     const root = await this.workspaceService.root;
-        //     const rootURI = root !== undefined ? root.uri : undefined;
-        //     this.terminalId = await this.shellTerminalServer.create(
-        //         { rootURI, cols: this.cols, rows: this.rows });
+        console.log("start!")
+        if (id === undefined) {
+            // const root = await this.workspaceService.root;
+            // const rootURI = root !== undefined ? root.uri : undefined;
 
-        // } else {
-        //     this.terminalId = await this.shellTerminalServer.attach(id);
-        // }
+            console.log("Try to create new terminal!!!");
+            this.terminalId = await this.termServer.create({ cmd: "/bin/bash -l", cols: this.cols, rows: this.rows });
+            console.log("Created: ", this.terminalId);
+        } else {
+            // this.terminalId = await this.shellTerminalServer.attach(id);
+        }
 
         // /* An error has occurred in the backend.  */
         // if (this.terminalId === -1 || this.terminalId === undefined) {
@@ -291,7 +295,7 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
 
         let url = "ws://" + "172.19.20.22:" + port + "/" + "exec/" + workspaceId + "/" + machineName + "?cmd=" + window.btoa(cmd);
 
-        return this.webSocketConnectionProvider.createWebSocket(url.toString(), { reconnecting: false }); 
+         return this.webSocketConnectionProvider.createWebSocket(url.toString(), { reconnecting: false }); 
     }
 
     protected onActivateRequest(msg: Message): void {
@@ -358,34 +362,36 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
     }
 
     protected async connectSocket(id: number) {
-        console.log("try to connect!!!!");
-        const socket = await this.createWebSocket(id.toString()); 
-        console.log("socket !!!!!");
+        // console.log("try to connect!!!!");
 
-        socket.onopen = () => {
-            console.log("open!!!!")
-            this.term.on("data", data => {
-                //socket.send(JSON.stringify({"type": "data", "data": data}))
-                socket.send(data);
-            });
-        };
+        //todo uncommment it !!!!
+        // const socket = await this.createWebSocket(id.toString()); 
+        // console.log("socket !!!!!");
 
-        socket.onmessage = ev => {
-            console.log(ev.data);
-            this.term.write(ev.data);
-        };
+        // socket.onopen = () => {
+        //     console.log("open!!!!")
+        //     this.term.on("data", data => {
+        //         //socket.send(JSON.stringify({"type": "data", "data": data}))
+        //         socket.send(data);
+        //     });
+        // };
 
-        socket.onerror = err => {
-            console.error(err);
-        };
+        // socket.onmessage = ev => {
+        //     console.log(ev.data);
+        //     this.term.write(ev.data);
+        // };
 
-        socket.onclose = (ev) => {
-            this.close();
-        }
+        // socket.onerror = err => {
+        //     console.error(err);
+        // };
 
-        this.toDispose.push(Disposable.create(() =>
-            socket.close()
-        ));
+        // socket.onclose = (ev) => {
+        //     this.close();
+        // }
+
+        // this.toDispose.push(Disposable.create(() =>
+        //     socket.close()
+        // ));
     }
 
     dispose(): void {

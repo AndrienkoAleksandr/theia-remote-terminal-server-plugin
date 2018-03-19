@@ -10,7 +10,7 @@
   ],
   "dependencies": {
     "@theia/core": "latest",
-    "env-variables-extension": "latest",
+    "@oandriie/env-variables-extension": "latest",
     "xterm": "^3.0.1"
   },
   "license": "Apache-2.0",

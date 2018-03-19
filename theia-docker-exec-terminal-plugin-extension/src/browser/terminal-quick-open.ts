@@ -2,21 +2,28 @@ import { injectable, inject } from "inversify"
 import { QuickOpenService, QuickOpenModel, QuickOpenItem } from '@theia/core/lib/browser/quick-open/';
 import { QuickOpenMode, QuickOpenOptions, WidgetManager } from "@theia/core/lib/browser";
 import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidgetFactoryOptions } from "./remote-terminal-widget";
+// import { getRestClient } from "workspace-client";
+// import { IWorkspace } from "workspace-client"
+import { IBaseEnvVariablesServer } from "@oandriie/env-variables-extension/lib/common/base-env-variables-protocol";
 
 @injectable()
 export class TerminalQuickOpenService {
 
     constructor(@inject(QuickOpenService) private readonly quickOpenService: QuickOpenService,
-                @inject(WidgetManager) private readonly widgetManager: WidgetManager) {
+                @inject(WidgetManager) private readonly widgetManager: WidgetManager,
+                @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,) {
     }
 
-    openTerminal(): void {
+    async openTerminal(): Promise<void> {
         const items: QuickOpenItem[] = [];
 
         items.push(new NewTerminalItem("theia", newTermItem => this.createNewTerminal(newTermItem.machineName)));
         items.push(new NewTerminalItem("dev-machine", newTermItem => this.createNewTerminal(newTermItem.machineName)))
+        // const workspaceId = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
+        // const workspaceIWorkspace: IWorkspace = getRestClient().getById(workspaceId);
 
         this.open(items, "Select machine to create new terminal");
+        Promise.resolve();
     }
 
     private getOpts(placeholder: string, fuzzyMatchLabel: boolean = true):QuickOpenOptions {

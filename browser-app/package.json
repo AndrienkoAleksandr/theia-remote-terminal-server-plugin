@@ -15,8 +15,9 @@
     "@theia/process": "latest",
     "@theia/typescript": "latest",
     "@theia/workspace": "latest",
-    "env-variables-extension": "latest",
-    "theia-docker-exec-terminal-plugin-extension": "^0.0.2"
+    "@oandriie/env-variables-extension": "latest",
+    "theia-docker-exec-terminal-plugin-extension": "0.0.2",
+    "@theia/terminal": "latest"
   },
   "devDependencies": {
     "@theia/cli": "latest"

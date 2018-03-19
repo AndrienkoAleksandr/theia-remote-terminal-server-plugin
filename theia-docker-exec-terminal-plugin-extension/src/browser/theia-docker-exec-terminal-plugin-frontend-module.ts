@@ -7,10 +7,11 @@ import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminal
 
 import { ContainerModule, Container } from "inversify";
 import { WidgetFactory, ApplicationShell } from '@theia/core/lib/browser';
-import { TerminalQuickOpenService } from "./terminal-quick-open"
-
-import '../../src/browser/terminal.css';
-import 'xterm/lib/xterm.css';
+import { TerminalQuickOpenService } from "./terminal-quick-open";
+import { IBaseTerminalServer } from '../common/base-terminal-protocol';
+import { terminalPath } from '../common/terminal-protocol';
+import { } from './remote'
+import { RemoteWebSocketConnectionProvider } from './remote-connection'
 
 export default new ContainerModule(bind => {
 
@@ -18,6 +19,7 @@ export default new ContainerModule(bind => {
     bind(MenuContribution).to(TheiaDockerExecTerminalPluginMenuContribution);
 
     bind(TerminalQuickOpenService).toSelf();
+    bind(RemoteWebSocketConnectionProvider).toSelf();
 
     bind(RemoteTerminalWidget).toSelf().inTransientScope();
 
@@ -44,4 +46,9 @@ export default new ContainerModule(bind => {
             return result;
         }
     }));
+
+    bind(IBaseTerminalServer).toDynamicValue(ctx => {
+        const connection = ctx.container.get(RemoteWebSocketConnectionProvider);
+        return connection.createProxy<IBaseTerminalServer>(terminalPath);
+    }).inSingletonScope();
 });
