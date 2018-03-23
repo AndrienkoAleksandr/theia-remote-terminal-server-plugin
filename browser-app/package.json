@@ -16,7 +16,7 @@
     "@theia/callhierarchy": "0.4.0-next.c145b153",
     "@theia/merge-conflicts": "0.4.0-next.c145b153",
     "@theia/search-in-workspace": "0.4.0-next.c145b153",
-    "@oandriie/env-variables-extension": "/home/user/projects/theia-env-variables-extension/env-variables-extension",
+    "@oandriie/env-variables-extension": "0.0.10",
     "theia-docker-exec-terminal-plugin-extension": "0.0.2"
   },
   "devDependencies": {

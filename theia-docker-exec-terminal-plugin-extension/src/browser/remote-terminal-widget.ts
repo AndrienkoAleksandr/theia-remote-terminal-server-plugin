@@ -7,7 +7,7 @@
 
 import { inject, injectable } from "inversify";
 import { Disposable, ILogger } from '@theia/core/lib/common';
-import { Widget, BaseWidget, Message,  Endpoint, WebSocketConnectionProvider } from '@theia/core/lib/browser'; // WebSocketConnectionProvider, StatefulWidget
+import { Widget, BaseWidget, Message, WebSocketConnectionProvider, StatefulWidget, isFirefox } from '@theia/core/lib/browser'; // WebSocketConnectionProvider, StatefulWidget
 // import { IShellTerminalServer } from '../common/shell-terminal-protocol';
 // import { ITerminalServer } from '../common/terminal-protocol';
 // import { IBaseTerminalErrorEvent, IBaseTerminalExitEvent } from '../common/base-terminal-protocol';
@@ -15,7 +15,8 @@ import { Widget, BaseWidget, Message,  Endpoint, WebSocketConnectionProvider } f
 import * as Xterm from 'xterm';
 import { ThemeService } from "@theia/core/lib/browser/theming";
 import { IBaseEnvVariablesServer } from "@oandriie/env-variables-extension/lib/common/base-env-variables-protocol";
-import { IBaseTerminalServer } from "../common/base-terminal-protocol";
+import { IBaseTerminalServer, ResizeParam } from "./base-terminal-protocol";
+import { Deferred } from "@theia/core/lib/common/promise-util";
 
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/fit/fit'));
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/attach/attach'));
@@ -25,7 +26,9 @@ export const REMOTE_TERMINAL_WIDGET_FACTORY_ID = 'remote-terminal';
 export const RemoteTerminalWidgetOptions = Symbol("TerminalWidgetOptions");
 export interface RemoteTerminalWidgetOptions {
     machineName: string,
-    endpoint: Endpoint.Options,
+    workspaceId: string,
+    // endpoint: Endpoint.Options,
+    endpoint: string,
     id: string,
     caption: string,
     label: string
@@ -34,7 +37,7 @@ export interface RemoteTerminalWidgetOptions {
 
 export interface RemoteTerminalWidgetFactoryOptions extends Partial<RemoteTerminalWidgetOptions> {
     /* a unique string per terminal */
-    created: string;
+    created: string
 }
 
 interface TerminalCSSProperties {
@@ -52,21 +55,25 @@ interface TerminalCSSProperties {
 }
 
 @injectable()
-export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWidget
+export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
 
     private terminalId: number | undefined;
     private term: Xterm.Terminal;
     private cols: number = 80;
     private rows: number = 40;
     private machineName = "dev-machine";
+    private workspaceId: string;
     // private endpoint: Endpoint;
+    private attacheTerminalEndPoint: string;
     protected restored = false;
     protected closeOnDispose = true;
-    // protected waitForStarted: Promise<void>;
-    // protected started: Function;
+
     protected openAfterShow = false;
     protected isOpeningTerm = false;
     protected isTermOpen = false;
+
+    protected waitForResized = new Deferred<void>();
+    protected waitForTermOpened = new Deferred<void>();
 
     constructor(
         // @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
@@ -79,16 +86,15 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
         @inject(ILogger) protected readonly logger: ILogger
     ) {
         super();
+
         // this.endpoint = new Endpoint(options.endpoint);
+        this.attacheTerminalEndPoint = options.endpoint;
         this.machineName = options.machineName;
+        this.workspaceId = options.workspaceId;
         this.id = options.id;
         this.title.caption = options.caption;
         this.title.label = options.label;
         this.title.iconClass = "fa fa-terminal";
-
-        // this.waitForStarted = new Promise(resolve => {
-        //     this.started = resolve;
-        // });
 
         if (options.destroyTermOnClose === true) {
             this.toDispose.push(Disposable.create(() =>
@@ -125,22 +131,28 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
         this.term.on('title', (title: string) => {
             this.title.label = title;
         });
+        if (isFirefox) {
+            // The software scrollbars don't work with xterm.js, so we disable the scrollbar if we are on firefox.
+            this.waitForTermOpened.promise.then(() => {
+                (this.term.element.children.item(0) as HTMLElement).style.overflow = 'hidden';
+            });
+        }
     }
 
-    // storeState(): object {
-    //     this.closeOnDispose = false;
-    //     return { terminalId: this.terminalId, titleLabel: this.title.label };
-    // }
+    storeState(): object {
+        this.closeOnDispose = false;
+        return { terminalId: this.terminalId, titleLabel: this.title.label };
+    }
 
-    // restoreState(oldState: object) {
-    //     if (this.restored === false) {
-    //         const state = oldState as any;
-    //         /* This is a workaround to issue #879 */
-    //         this.restored = true;
-    //         this.title.label = state.titleLabel;
-    //         this.start(state.terminalId);
-    //     }
-    // }
+    restoreState(oldState: object) {
+        if (this.restored === false) {
+            const state = oldState as { terminalId: number, titleLabel: string };
+            /* This is a workaround to issue #879 */
+            this.restored = true;
+            this.title.label = state.titleLabel;
+            this.start(state.terminalId);
+        }
+    }
 
     /* Get the font family and size from the CSS custom properties defined in
        the root element.  */
@@ -196,10 +208,6 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
     }
 
     protected registerResize(): void {
-        const initialGeometry = (this.term as any).proposeGeometry();
-        this.cols = initialGeometry.cols;
-        this.rows = initialGeometry.rows;
-
         this.term.on('resize', size => {
             if (this.terminalId === undefined) {
                 return;
@@ -211,42 +219,57 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
 
             this.cols = size.cols;
             this.rows = size.rows;
-            // Todo implement resize!!!
-            //this.shellTerminalServer.resize(this.terminalId, this.cols, this.rows);
+
+            let resizeParam: ResizeParam = {
+                id: this.terminalId,
+                cols: this.cols,
+                rows: this.rows
+            };
+            console.log("terminal-id=" + resizeParam.id);
+            this.termServer.resize(resizeParam);
         });
-        (this.term as any).fit();
     }
 
     /**
-     * Create a new shell terminal in the back-end and attach it to a
+     * Create a new remote terminal in the back-end and attach it to a
      * new terminal widget.
      * If id is provided attach to the terminal for this id.
      */
     public async start(id?: number): Promise<void> {
-        console.log("start!")
+        await this.waitForResized.promise;
         if (id === undefined) {
-            // const root = await this.workspaceService.root;
-            // const rootURI = root !== undefined ? root.uri : undefined;
-
             console.log("Try to create new terminal!!!");
-            this.terminalId = await this.termServer.create({ cmd: "/bin/bash -l", cols: this.cols, rows: this.rows });
+
+            let machineExec = {
+                identifier: {
+                    machineName: this.machineName,
+                    workspaceId: this.workspaceId
+                },
+                cmd: "/bin/bash", //todo arrya ["/bin/bash", "-l"]
+                cols: this.cols,
+                rows: this.rows,
+                tty: true
+            };
+
+            this.terminalId = await this.termServer.create(machineExec);
             console.log("Created: ", this.terminalId);
         } else {
             // this.terminalId = await this.shellTerminalServer.attach(id);
         }
 
-        // /* An error has occurred in the backend.  */
-        // if (this.terminalId === -1 || this.terminalId === undefined) {
-        //     this.terminalId = undefined;
-        //     if (id === undefined) {
-        //         this.logger.error("Error creating terminal widget, see the backend error log for more information.  ");
-        //     } else {
-        //         this.logger.error(`Error attaching to terminal id ${id}, the terminal is most likely gone. Starting up a new terminal instead.  `);
-        //         this.start();
-        //     }
-        //     return;
-        // }
-        // this.started();
+        /* An error has occurred in the backend.  */
+        if (this.terminalId === -1 || this.terminalId === undefined) {
+            this.terminalId = undefined;
+            if (id === undefined) {
+                this.logger.error("Error creating terminal widget, see the backend error log for more information.  ");
+            } else {
+                this.logger.error(`Error attaching to terminal id ${id}, the terminal is most likely gone. Starting up a new terminal instead.  `);
+                this.start();
+            }
+            return;
+        }
+        await this.doResize();
+        this.connectTerminalProcess(this.terminalId);
     }
 
     protected async openTerm(): Promise<void> {
@@ -257,45 +280,22 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
             return Promise.reject("Already open");
         }
 
-        /* Wait for the backend terminal to be requested before opening the xterm terminal.  */
-        // await this.waitForStarted;
-
-        // if (this.terminalId === undefined) {
-        //     /* Don't retry to open, something is permanently wrong.  */
-        //     this.isOpeningTerm = false;
-        //     this.isTermOpen = true;
-        //     return Promise.reject("No terminal");
-        // }
-
         /* This may have changed since we waited for waitForStarted. Test it again.  */
         if (this.isVisible === false) {
             this.isOpeningTerm = false;
             return Promise.reject("Not visible");
         }
 
-        this.terminalId = 0;
         this.term.open(this.node);
         this.registerResize();
-        this.connectSocket(this.terminalId);
-        this.monitorTerminal(this.terminalId);
-
         this.isTermOpen = true;
-        return Promise.resolve();
+        this.waitForTermOpened.resolve();
+        return this.waitForTermOpened.promise;
     }
 
     protected async createWebSocket(pid: string): Promise<WebSocket> {
-        // const url = this.endpoint.getWebSocketUrl().resolve(pid);
-        //const url = this.options.endpoint; // "ws://172.19.20.22:32811/pty";
-
-        let port = "9999";
-        let cmd = "/bin/bash";
-        let machineName = this.machineName;
-
-        let workspaceId:string = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
-
-        let url = "ws://" + "172.19.20.22:" + port + "/" + "exec/" + workspaceId + "/" + machineName + "?cmd=" + window.btoa(cmd);
-
-         return this.webSocketConnectionProvider.createWebSocket(url.toString(), { reconnecting: false }); 
+        let url = this.attacheTerminalEndPoint + "/" + this.terminalId;
+        return this.webSocketConnectionProvider.createWebSocket(url, { reconnecting: false });
     }
 
     protected onActivateRequest(msg: Message): void {
@@ -335,16 +335,23 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
         }
     }
 
+    // tslint:disable-next-line:no-any
     private resizeTimer: any;
 
     protected onResize(msg: Widget.ResizeMessage): void {
         super.onResize(msg);
-        if (this.isTermOpen) {
-            clearTimeout(this.resizeTimer);
-            this.resizeTimer = setTimeout(() => {
+        this.waitForResized.resolve();
+        clearTimeout(this.resizeTimer);
+        this.resizeTimer = setTimeout(() => {
+            this.waitForTermOpened.promise.then(() => {
                 this.doResize();
-            }, 500);
-        }
+            });
+        }, 50);
+    }
+
+    protected connectTerminalProcess(id: number) {
+        this.monitorTerminal(id);
+        this.connectSocket(id);
     }
 
     protected monitorTerminal(id: number) {
@@ -361,59 +368,51 @@ export class RemoteTerminalWidget extends BaseWidget  { // implements StatefulWi
         // }));
     }
 
+
     protected async connectSocket(id: number) {
-        // console.log("try to connect!!!!");
+        console.log("try to connect!!!!");
 
-        //todo uncommment it !!!!
-        // const socket = await this.createWebSocket(id.toString()); 
-        // console.log("socket !!!!!");
+        // todo uncommment it !!!!
+        const socket = await this.createWebSocket(id.toString());
+        console.log("socket !!!!!" + socket);
 
-        // socket.onopen = () => {
-        //     console.log("open!!!!")
-        //     this.term.on("data", data => {
-        //         //socket.send(JSON.stringify({"type": "data", "data": data}))
-        //         socket.send(data);
-        //     });
-        // };
+        socket.onopen = () => {
+            console.log("open!!!!")
+            this.term.on("data", data => {
+                //socket.send(JSON.stringify({"type": "data", "data": data}))
+                socket.send(data);
+            });
+        };
 
-        // socket.onmessage = ev => {
-        //     console.log(ev.data);
-        //     this.term.write(ev.data);
-        // };
+        socket.onmessage = ev => {
+            console.log(ev.data);
+            this.term.write(ev.data);
+        };
 
-        // socket.onerror = err => {
-        //     console.error(err);
-        // };
+        socket.onerror = err => {
+            console.error(err);
+        };
 
-        // socket.onclose = (ev) => {
-        //     this.close();
-        // }
+        socket.onclose = (ev) => {
+            this.close();
+        }
 
-        // this.toDispose.push(Disposable.create(() =>
-        //     socket.close()
-        // ));
+        this.toDispose.push(Disposable.create(() =>
+            socket.close()
+        ));
     }
 
     dispose(): void {
-
-        /* Close the backend terminal only when explicitly closting the terminal
+        /* Close the backend terminal only when explicitly closing the terminal
          * a refresh for example won't close it.  */
-        // if (this.closeOnDispose === true && this.terminalId !== undefined) {
-        //     this.shellTerminalServer.close(this.terminalId);
-        // }
-
-        if (this.resizeTimer !== undefined) {
-            clearTimeout(this.resizeTimer);
+        if (this.closeOnDispose === true && this.terminalId !== undefined) {
+            // this.shellTerminalServer.close(this.terminalId);
         }
-
         super.dispose();
     }
 
-    private doResize() {
-        if (this.term === undefined) {
-            clearTimeout(this.resizeTimer);
-            return;
-        }
+    private async doResize() {
+        await Promise.all([this.waitForResized.promise, this.waitForTermOpened.promise]);
         const geo = (this.term as any).proposeGeometry();
         this.cols = geo.cols;
         this.rows = geo.rows - 1; // subtract one row for margin

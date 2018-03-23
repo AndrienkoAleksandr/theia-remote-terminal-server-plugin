@@ -8,8 +8,7 @@ import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminal
 import { ContainerModule, Container } from "inversify";
 import { WidgetFactory, ApplicationShell } from '@theia/core/lib/browser';
 import { TerminalQuickOpenService } from "./terminal-quick-open";
-import { IBaseTerminalServer } from '../common/base-terminal-protocol';
-import { terminalPath } from '../common/terminal-protocol';
+import { IBaseTerminalServer, manageTerminalPath } from './base-terminal-protocol';
 import { } from './remote'
 import { RemoteWebSocketConnectionProvider } from './remote-connection'
 
@@ -49,6 +48,6 @@ export default new ContainerModule(bind => {
 
     bind(IBaseTerminalServer).toDynamicValue(ctx => {
         const connection = ctx.container.get(RemoteWebSocketConnectionProvider);
-        return connection.createProxy<IBaseTerminalServer>(terminalPath);
+        return connection.createProxy<IBaseTerminalServer>(manageTerminalPath);
     }).inSingletonScope();
 });

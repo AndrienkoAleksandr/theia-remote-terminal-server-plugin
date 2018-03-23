@@ -5,6 +5,7 @@ import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminal
 // import { getRestClient } from "workspace-client";
 // import { IWorkspace } from "workspace-client"
 import { IBaseEnvVariablesServer } from "@oandriie/env-variables-extension/lib/common/base-env-variables-protocol";
+import { terminalAttachUrl } from "./base-terminal-protocol";
 
 @injectable()
 export class TerminalQuickOpenService {
@@ -20,7 +21,9 @@ export class TerminalQuickOpenService {
         items.push(new NewTerminalItem("theia", newTermItem => this.createNewTerminal(newTermItem.machineName)));
         items.push(new NewTerminalItem("dev-machine", newTermItem => this.createNewTerminal(newTermItem.machineName)))
         // const workspaceId = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
-        // const workspaceIWorkspace: IWorkspace = getRestClient().getById(workspaceId);
+        // const restClient = getRestApi();
+        // const workspace = await restClient.getById(workspaceId);
+        // console.log(workspace);
 
         this.open(items, "Select machine to create new terminal");
         Promise.resolve();
@@ -47,9 +50,12 @@ export class TerminalQuickOpenService {
     }
 
     protected async createNewTerminal(machineName: string): Promise<void> {
+        let workspaceId:string = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
         const widget = <RemoteTerminalWidget>await this.widgetManager.getOrCreateWidget(REMOTE_TERMINAL_WIDGET_FACTORY_ID, <RemoteTerminalWidgetFactoryOptions>{
             created: new Date().toString(),
-            machineName: machineName
+            machineName: machineName,
+            workspaceId: workspaceId,
+            endpoint: terminalAttachUrl
         });
         widget.start();
     }
