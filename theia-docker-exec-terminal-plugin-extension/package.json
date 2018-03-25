@@ -1,9 +1,16 @@
 {
   "name": "theia-docker-exec-terminal-plugin-extension",
   "keywords": [
-    "theia-extension"
+    "theia-extension",
+    "terminal"
   ],
   "version": "0.0.2",
+  "contributors": [
+    {
+      "name": "Oleksandr Andriienko",
+      "email": "oandriie@redhat.com"
+    }
+  ],
   "files": [
     "lib",
     "src"
@@ -13,10 +20,10 @@
     "@oandriie/env-variables-extension": "0.0.10",
     "xterm": "^3.0.1"
   },
-  "license": "Apache-2.0",
+  "license": "EPL-1.0",
   "devDependencies": {
-    "rimraf": "latest",
-    "typescript": "latest"
+    "typescript": "2.7.2",
+    "rimraf": "2.6.2"
   },
   "scripts": {
     "prepare": "yarn run clean && yarn run build",
