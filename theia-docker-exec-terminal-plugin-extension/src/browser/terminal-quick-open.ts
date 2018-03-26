@@ -2,8 +2,7 @@ import { injectable, inject } from "inversify"
 import { QuickOpenService, QuickOpenModel, QuickOpenItem } from '@theia/core/lib/browser/quick-open/';
 import { QuickOpenMode, QuickOpenOptions, WidgetManager } from "@theia/core/lib/browser";
 import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidgetFactoryOptions } from "./remote-terminal-widget";
-import { getRestApi } from "workspace-client";
-// import { IWorkspace } from "workspace-client"
+import { getRestApi, IWorkspace, IRequestError } from "workspace-client";
 import { IBaseEnvVariablesServer } from "@oandriie/env-variables-extension/lib/common/base-env-variables-protocol";
 import { terminalAttachUrl } from "./base-terminal-protocol";
 
@@ -16,17 +15,45 @@ export class TerminalQuickOpenService {
     }
 
     async openTerminal(): Promise<void> {
-        const items: QuickOpenItem[] = [];
-
-        items.push(new NewTerminalItem("theia", newTermItem => this.createNewTerminal(newTermItem.machineName)));
-        items.push(new NewTerminalItem("dev-machine", newTermItem => this.createNewTerminal(newTermItem.machineName)))
         const workspaceId = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
-        const restClient = getRestApi();
-        const workspace = await restClient.getById(workspaceId);
-        console.log(workspace);
+        //const cheHost = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_HOST");
 
-        this.open(items, "Select machine to create new terminal");
-        Promise.resolve();
+        const machines = await this.getListMachines(workspaceId);
+        if (machines) {
+            const items: QuickOpenItem[] = machines.map<NewTerminalItem>((machineName, id) => {
+                return new NewTerminalItem(machineName, newTermItemFunc => this.createNewTerminal(newTermItemFunc.machineName));
+            });
+
+            this.open(items, "Select machine to create new terminal");
+        }
+    }
+
+    private async getListMachines(workspaceId: string): Promise<Array<string>> {
+        let machineNames: string[] = [];
+
+        if (!workspaceId) {
+            return Promise.resolve(machineNames);
+        }
+
+        const restClient = getRestApi({
+            baseUrl: "http://172.19.20.22:8080/api"
+        });
+
+        return new Promise<string[]>( (resolve, reject) => {
+            restClient.getById<IWorkspace>(workspaceId)
+            .catch((reason: IRequestError) => {
+                console.log("Failed to get workspace by ID: ", workspaceId, "Status code: ", reason.status);
+                reject(reason.message);
+            })
+            .then((workspace: IWorkspace) => {
+                if (workspace.runtime) {
+                   for(let machine in workspace.runtime.machines) {
+                     machineNames.push(machine)
+                   }
+                }
+                resolve(machineNames);
+            });
+        });
     }
 
     private getOpts(placeholder: string, fuzzyMatchLabel: boolean = true):QuickOpenOptions {
