@@ -3,9 +3,10 @@ import { QuickOpenService, QuickOpenModel, QuickOpenItem } from '@theia/core/lib
 import { QuickOpenMode, QuickOpenOptions, WidgetManager } from "@theia/core/lib/browser";
 import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidgetFactoryOptions } from "./remote-terminal-widget";
 import { getRestApi, IWorkspace, IRequestError } from "workspace-client";
-import { IBaseEnvVariablesServer } from "@oandriie/env-variables-extension/lib/common/base-env-variables-protocol";
+import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
 import { terminalAttachUrl } from "./base-terminal-protocol";
 
+//todo Global todo. Clean terminal restore information on stop workspace.
 @injectable()
 export class TerminalQuickOpenService {
 
@@ -32,7 +33,7 @@ export class TerminalQuickOpenService {
         let machineNames: string[] = [];
 
         if (!workspaceId) {
-            return Promise.resolve(machineNames);
+            return machineNames;
         }
 
         const restClient = getRestApi({

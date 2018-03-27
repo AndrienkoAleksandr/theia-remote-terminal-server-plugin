@@ -14,7 +14,7 @@ import { Widget, BaseWidget, Message, WebSocketConnectionProvider, StatefulWidge
 // import { TerminalWatcher } from '../common/terminal-watcher';
 import * as Xterm from 'xterm';
 import { ThemeService } from "@theia/core/lib/browser/theming";
-import { IBaseEnvVariablesServer } from "@oandriie/env-variables-extension/lib/common/base-env-variables-protocol";
+import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
 import { IBaseTerminalServer, ResizeParam } from "./base-terminal-protocol";
 import { Deferred } from "@theia/core/lib/common/promise-util";
 
@@ -241,11 +241,12 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
             console.log("Try to create new terminal!!!");
 
             let machineExec = {
+                // todo it would be nice to add field for TERM env variable...
                 identifier: {
                     machineName: this.machineName,
                     workspaceId: this.workspaceId
                 },
-                cmd: "/bin/bash", //todo arrya ["/bin/bash", "-l"]
+                cmd: ["/bin/bash"], //todo maybe without login array ["/bin/bash", "-l"]
                 cols: this.cols,
                 rows: this.rows,
                 tty: true
@@ -372,20 +373,16 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     protected async connectSocket(id: number) {
         console.log("try to connect!!!!");
 
-        // todo uncommment it !!!!
         const socket = await this.createWebSocket(id.toString());
-        console.log("socket !!!!!" + socket);
 
         socket.onopen = () => {
             console.log("open!!!!")
             this.term.on("data", data => {
-                //socket.send(JSON.stringify({"type": "data", "data": data}))
                 socket.send(data);
             });
         };
 
         socket.onmessage = ev => {
-            console.log(ev.data);
             this.term.write(ev.data);
         };
 
@@ -406,7 +403,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
         /* Close the backend terminal only when explicitly closing the terminal
          * a refresh for example won't close it.  */
         if (this.closeOnDispose === true && this.terminalId !== undefined) {
-            // this.shellTerminalServer.close(this.terminalId);
+            this.termServer.kill({"id": this.terminalId});
         }
         super.dispose();
     }

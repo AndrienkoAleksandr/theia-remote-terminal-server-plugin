@@ -11,15 +11,18 @@ export interface MachineIdentifier {
 
 export interface MachineExec {
     identifier: MachineIdentifier,
-    cmd: string,
+    cmd: string[],
     tty:boolean,
     cols: number,
     rows: number,
     id?: number
 }
 
-export interface ResizeParam {
-    id: number,
+export interface IdParam {
+    id: number
+}
+
+export interface ResizeParam extends IdParam {
     rows: number,
     cols: number
 }
@@ -29,9 +32,6 @@ export interface IBaseTerminalServer {
     create(machineExec: MachineExec): Promise<number>;
     // attach(id :number): Promise<number>;
     resize(resizeParam: ResizeParam): Promise<void>;
-    kill(id :string): Promise<void>;
-
-    get(id :string): Promise<MachineExec>;
+    kill(id: IdParam): Promise<void>;
+    get(id :IdParam): Promise<MachineExec>;
 }
-
-//todo move it to browser

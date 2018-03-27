@@ -2,8 +2,8 @@
 # yarn lockfile v1
 
 
-"@oandriie/env-variables-extension@file:../theia-env-variables-extension/env-variables-extension":
-  version "0.0.10"
+"@oandriie/env-variables-extension@file:../che-theia-env-variables-plugin/env-variables-extension", "env-variables-extension@file:../che-theia-env-variables-plugin/env-variables-extension":
+  version "0.0.0"
   dependencies:
     "@theia/core" "0.4.0-next.c145b153"
 
@@ -2745,8 +2745,8 @@ ee-first@1.1.1:
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
 
 ejs@^2.3.1:
-  version "2.5.7"
-  resolved "https://registry.yarnpkg.com/ejs/-/ejs-2.5.7.tgz#cc872c168880ae3c7189762fd5ffc00896c9518a"
+  version "2.5.8"
+  resolved "https://registry.yarnpkg.com/ejs/-/ejs-2.5.8.tgz#2ab6954619f225e6193b7ac5f7c39c48fefe4380"
 
 electron-download@^3.0.1:
   version "3.3.0"
@@ -3913,8 +3913,8 @@ inquirer@^3.2.2, inquirer@^3.3.0:
     through "^2.3.6"
 
 inquirer@^5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/inquirer/-/inquirer-5.1.0.tgz#19da508931892328abbbdd4c477f1efc65abfd67"
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/inquirer/-/inquirer-5.2.0.tgz#db350c2b73daca77ff1243962e9f22f099685726"
   dependencies:
     ansi-escapes "^3.0.0"
     chalk "^2.0.0"
@@ -6539,8 +6539,8 @@ rx-lite@*, rx-lite@^4.0.8:
   resolved "https://registry.yarnpkg.com/rx-lite/-/rx-lite-4.0.8.tgz#0b1e11af8bc44836f04a6407e92da42467b79444"
 
 rxjs@^5.1.1, rxjs@^5.4.2, rxjs@^5.5.2:
-  version "5.5.7"
-  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.5.7.tgz#afb3d1642b069b2fbf203903d6501d1acb4cda27"
+  version "5.5.8"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.5.8.tgz#b2b0809a57614ad6254c03d7446dea0d83ca3791"
   dependencies:
     symbol-observable "1.0.1"
 
@@ -7326,7 +7326,7 @@ uglify-to-browserify@~1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/uglify-to-browserify/-/uglify-to-browserify-1.0.2.tgz#6e0924d6bda6b5afe349e39a6d632850a0f882b7"
 
-uglifyjs-webpack-plugin@^1.1.1:
+uglifyjs-webpack-plugin@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/uglifyjs-webpack-plugin/-/uglifyjs-webpack-plugin-1.2.4.tgz#5eec941b2e9b8538be0a20fc6eda25b14c7c1043"
   dependencies:
@@ -7678,8 +7678,8 @@ webpack-sources@^1.0.1, webpack-sources@^1.1.0:
     source-map "~0.6.1"
 
 webpack@^4.0.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/webpack/-/webpack-4.2.0.tgz#a4f80807651a0e611bb09609600dc266262efcc1"
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/webpack/-/webpack-4.3.0.tgz#0b0c1e211311b3995dd25aed47ab46ea658be070"
   dependencies:
     acorn "^5.0.0"
     acorn-dynamic-import "^3.0.0"
@@ -7697,7 +7697,7 @@ webpack@^4.0.0:
     node-libs-browser "^2.0.0"
     schema-utils "^0.4.2"
     tapable "^1.0.0"
-    uglifyjs-webpack-plugin "^1.1.1"
+    uglifyjs-webpack-plugin "^1.2.4"
     watchpack "^1.5.0"
     webpack-sources "^1.0.1"
 
