@@ -36,8 +36,9 @@ export class TerminalQuickOpenService {
             return machineNames;
         }
 
+        const baseUrl = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_API");
         const restClient = getRestApi({
-            baseUrl: "http://172.19.20.22:8080/api"
+            baseUrl: baseUrl
         });
 
         return new Promise<string[]>( (resolve, reject) => {

@@ -1,6 +1,6 @@
 // todo apply context to the server side
 
-const baseTerminalUrl = "ws://localhost:4444"
+const baseTerminalUrl = "terminal:4444"
 export const manageTerminalPath = `${baseTerminalUrl}/connect`;
 export const terminalAttachUrl = `${baseTerminalUrl}/attach`
 
