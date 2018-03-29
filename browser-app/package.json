@@ -3,24 +3,24 @@
   "name": "browser-app",
   "version": "0.0.2",
   "dependencies": {
-    "@theia/typescript": "0.4.0-next.c145b153",
-    "@theia/navigator": "0.4.0-next.c145b153",
-    "@theia/terminal": "0.4.0-next.c145b153",
-    "@theia/outline-view": "0.4.0-next.c145b153",
-    "@theia/preferences": "0.4.0-next.c145b153",
-    "@theia/messages": "0.4.0-next.c145b153",
-    "@theia/git": "0.4.0-next.c145b153",
-    "@theia/file-search": "0.4.0-next.c145b153",
-    "@theia/markers": "0.4.0-next.c145b153",
-    "@theia/preview": "0.4.0-next.c145b153",
-    "@theia/callhierarchy": "0.4.0-next.c145b153",
-    "@theia/merge-conflicts": "0.4.0-next.c145b153",
-    "@theia/search-in-workspace": "0.4.0-next.c145b153",
+    "@theia/typescript": "0.3.8",
+    "@theia/navigator": "0.3.8",
+    "@theia/terminal": "0.3.8",
+    "@theia/outline-view": "0.3.8",
+    "@theia/preferences": "0.3.8",
+    "@theia/messages": "0.3.8",
+    "@theia/git": "0.3.8",
+    "@theia/file-search": "0.3.8",
+    "@theia/markers": "0.3.8",
+    "@theia/preview": "0.3.8",
+    "@theia/callhierarchy": "0.3.8",
+    "@theia/merge-conflicts": "0.3.8",
+    "@theia/search-in-workspace": "0.3.8",
     "env-variables-extension": "0.0.10",
     "theia-docker-exec-terminal-plugin-extension": "0.0.2"
   },
   "devDependencies": {
-    "@theia/cli": "0.4.0-next.c145b153"
+    "@theia/cli": "0.3.8"
   },
   "scripts": {
     "prepare": "theia build",

@@ -16,7 +16,7 @@
     "src"
   ],
   "dependencies": {
-    "@theia/core": "0.4.0-next.c145b153",
+    "@theia/core": "0.3.8",
     "env-variables-extension": "0.0.10",
     "xterm": "^3.0.1",
     "workspace-client": "https://github.com/akurinnoy/workspace-client"
