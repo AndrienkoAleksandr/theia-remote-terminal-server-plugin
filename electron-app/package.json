@@ -16,7 +16,7 @@
     "@theia/callhierarchy": "0.3.8",
     "@theia/merge-conflicts": "0.3.8",
     "@theia/search-in-workspace": "0.3.8",
-    "env-variables-extension": "github:AndrienkoAleksandr/che-theia-env-variables-plugin#temp",
+    "env-variables-extension": "https://github.com/AndrienkoAleksandr/che-theia-env-variables-plugin.git#temp",
     "theia-docker-exec-terminal-plugin-extension": "0.0.2"
   },
   "devDependencies": {
