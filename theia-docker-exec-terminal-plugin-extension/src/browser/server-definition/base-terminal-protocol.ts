@@ -1,8 +1,19 @@
+/*
+ * Copyright (c) 2018-2018 Red Hat, Inc.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Red Hat, Inc. - initial API and implementation
+ */
+
 // todo apply context to the server side
 
-const baseTerminalUrl = "terminal:4444"
-export const manageTerminalPath = `${baseTerminalUrl}/connect`;
-export const terminalAttachUrl = `${baseTerminalUrl}/attach`
+export const remoteServerName = "terminal-exec"
+export const manageTerminalPathSegment = "/connect";
+export const terminalAttachUrlSegment = "/attach"
 
 export interface MachineIdentifier {
     machineName: string,

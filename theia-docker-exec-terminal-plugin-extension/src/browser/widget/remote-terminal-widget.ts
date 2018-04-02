@@ -8,15 +8,11 @@
 import { inject, injectable } from "inversify";
 import { Disposable, ILogger } from '@theia/core/lib/common';
 import { Widget, BaseWidget, Message, WebSocketConnectionProvider, StatefulWidget, isFirefox } from '@theia/core/lib/browser'; // WebSocketConnectionProvider, StatefulWidget
-// import { IShellTerminalServer } from '../common/shell-terminal-protocol';
-// import { ITerminalServer } from '../common/terminal-protocol';
-// import { IBaseTerminalErrorEvent, IBaseTerminalExitEvent } from '../common/base-terminal-protocol';
-// import { TerminalWatcher } from '../common/terminal-watcher';
 import * as Xterm from 'xterm';
 import { ThemeService } from "@theia/core/lib/browser/theming";
 import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
-import { IBaseTerminalServer, ResizeParam } from "./base-terminal-protocol";
 import { Deferred } from "@theia/core/lib/common/promise-util";
+import { IBaseTerminalServer, ResizeParam } from "../server-definition/base-terminal-protocol";
 
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/fit/fit'));
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/attach/attach'));
@@ -63,7 +59,6 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     private rows: number = 40;
     private machineName = "dev-machine";
     private workspaceId: string;
-    // private endpoint: Endpoint;
     private attacheTerminalEndPoint: string;
     protected restored = false;
     protected closeOnDispose = true;
@@ -76,13 +71,10 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     protected waitForTermOpened = new Deferred<void>();
 
     constructor(
-        // @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(WebSocketConnectionProvider) protected readonly webSocketConnectionProvider: WebSocketConnectionProvider,
         @inject(RemoteTerminalWidgetOptions) protected readonly options: RemoteTerminalWidgetOptions,
         @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
         @inject(IBaseTerminalServer) protected readonly termServer: IBaseTerminalServer,
-        // @inject(IShellTerminalServer) protected readonly shellTerminalServer: ITerminalServer,
-        // @inject(TerminalWatcher) protected readonly terminalWatcher: TerminalWatcher,
         @inject(ILogger) protected readonly logger: ILogger
     ) {
         super();
@@ -356,17 +348,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     }
 
     protected monitorTerminal(id: number) {
-        // this.toDispose.push(this.terminalWatcher.onTerminalError((event: IBaseTerminalErrorEvent) => {
-        //     if (event.terminalId === id) {
-        //         this.title.label = "<terminal error>";
-        //     }
-        // }));
-
-        // this.toDispose.push(this.terminalWatcher.onTerminalExit((event: IBaseTerminalExitEvent) => {
-        //     if (event.terminalId === id) {
-        //         this.title.label = "<terminated>";
-        //     }
-        // }));
+        // todo complete if it's possible
     }
 
 
