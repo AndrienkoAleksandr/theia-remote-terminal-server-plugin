@@ -1,3 +1,3 @@
 #!/bin/bash
 
-export CHE_WORKSPACE_ID=$1  && cd browser-app && yarn run start
+export CHE_WORKSPACE_ID=workspace8xa30590jdfzi4gb  && cd browser-app && yarn run start

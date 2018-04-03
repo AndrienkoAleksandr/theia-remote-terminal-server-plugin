@@ -5,6 +5,7 @@ import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminal
 import { getRestApi, IWorkspace, IRequestError } from "workspace-client";
 import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
 import { terminalAttachUrl } from "./base-terminal-protocol";
+import { WorkspaceClient } from "./workspace/workspace-client";
 
 //todo Global todo. Clean terminal restore information on stop workspace.
 @injectable()
@@ -12,7 +13,10 @@ export class TerminalQuickOpenService {
 
     constructor(@inject(QuickOpenService) private readonly quickOpenService: QuickOpenService,
                 @inject(WidgetManager) private readonly widgetManager: WidgetManager,
-                @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,) {
+                @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
+                @inject(WorkspaceClient)protected readonly wsClient: WorkspaceClient,
+                @inject("url") public readonly someUrl: string) {
+                    console.log("SSSSome url " + someUrl)
     }
 
     async openTerminal(): Promise<void> {
@@ -36,10 +40,14 @@ export class TerminalQuickOpenService {
             return machineNames;
         }
 
-        const baseUrl = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_API");
+        //const baseUrl = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_API");
+        const baseUrl = "http://172.19.20.22:8080/api";
         const restClient = getRestApi({
             baseUrl: baseUrl
         });
+
+        let url = await this.wsClient.findTerminalServer();
+        console.log("URL " + url);
 
         return new Promise<string[]>( (resolve, reject) => {
             restClient.getById<IWorkspace>(workspaceId)

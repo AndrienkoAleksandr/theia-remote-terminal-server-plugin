@@ -2,12 +2,6 @@
 # yarn lockfile v1
 
 
-"@oandriie/env-variables-extension@github:AndrienkoAleksandr/che-theia-env-variables-plugin#temp", "env-variables-extension@github:AndrienkoAleksandr/che-theia-env-variables-plugin#temp":
-  version "0.0.0"
-  resolved "https://codeload.github.com/AndrienkoAleksandr/che-theia-env-variables-plugin/tar.gz/211d48b73aad0a3da4c5bda5de1d2dcecc290b60"
-  dependencies:
-    "@theia/core" "0.3.8"
-
 "@phosphor/algorithm@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@phosphor/algorithm/-/algorithm-1.1.2.tgz#fd1de9104c9a7f34e92864586ddf2e7f2e7779e8"
