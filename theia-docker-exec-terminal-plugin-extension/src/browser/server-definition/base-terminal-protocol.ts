@@ -38,10 +38,12 @@ export interface ResizeParam extends IdParam {
     cols: number
 }
 
-export const IBaseTerminalServer = Symbol('IBaseTerminalServer');
+// export type IBaseTerminalServerProvider = () => Promise<IBaseTerminalServer>;
+
+// export const IBaseTerminalServer = Symbol('IBaseTerminalServer');
 export interface IBaseTerminalServer {
     create(machineExec: MachineExec): Promise<number>;
-    // attach(id :number): Promise<number>;
+    attach(id :IdParam): Promise<number>;
     resize(resizeParam: ResizeParam): Promise<void>;
     kill(id: IdParam): Promise<void>;
     get(id :IdParam): Promise<MachineExec>;

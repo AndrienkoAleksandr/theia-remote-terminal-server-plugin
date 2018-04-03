@@ -13,8 +13,9 @@ import { QuickOpenService, QuickOpenModel, QuickOpenItem } from '@theia/core/lib
 import { QuickOpenMode, QuickOpenOptions, WidgetManager } from "@theia/core/lib/browser";
 import { TerminalApiEndPointProvider } from "../server-definition/remote-terminal-path-provider";
 import { WorkspaceClient } from "../workspace/workspace-client";
-import { terminalAttachUrlSegment, remoteServerName } from "../server-definition/base-terminal-protocol";
+// import { terminalAttachUrlSegment } from "../server-definition/base-terminal-protocol";
 import { REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidgetFactoryOptions, RemoteTerminalWidget } from "../widget/remote-terminal-widget";
+import { terminalAttachUrlSegment } from "../server-definition/base-terminal-protocol";
 
 //todo Global todo. Clean terminal restore information on stop workspace.
 @injectable()
@@ -23,7 +24,7 @@ export class TerminalQuickOpenService {
     constructor(@inject(QuickOpenService) private readonly quickOpenService: QuickOpenService,
                 @inject(WidgetManager) private readonly widgetManager: WidgetManager,
                 @inject(WorkspaceClient) private readonly wsClient: WorkspaceClient,
-                // @inject(TerminalApiEndPointProvider) private readonly termApiEndPoint: TerminalApiEndPointProvider,
+                @inject("TerminalApiEndPointProvider") private readonly termApiEndPointProvider: TerminalApiEndPointProvider,
             ) {
     }
 
@@ -62,12 +63,12 @@ export class TerminalQuickOpenService {
 
     protected async createNewTerminal(machineName: string): Promise<void> {
         const workspaceId = await this.wsClient.getWorkspaceId();
-        // const termApiEndPoint = await this.termApiEndPoint.getUrl(remoteServerName);
+        const termEndPoint: string = await this.termApiEndPointProvider();
         const widget = <RemoteTerminalWidget>await this.widgetManager.getOrCreateWidget(REMOTE_TERMINAL_WIDGET_FACTORY_ID, <RemoteTerminalWidgetFactoryOptions>{
             created: new Date().toString(),
             machineName: machineName,
             workspaceId: workspaceId,
-            // endpoint: termApiEndPoint + terminalAttachUrlSegment
+            endpoint: termEndPoint + terminalAttachUrlSegment
         });
         widget.start();
     }

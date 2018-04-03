@@ -10,20 +10,17 @@
  */
 
 import { injectable, inject } from "inversify";
-import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
 import { WorkspaceClient } from "../workspace/workspace-client";
 
-export type TerminalApiEndPointProvider = (url: string) => Promise<string>;
-
+export type TerminalApiEndPointProvider = () => Promise<string>;
 
 @injectable()
 export class TerminalApiEndPoint {
 
-    constructor(@inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
-                @inject(WorkspaceClient) protected readonly wsClient: WorkspaceClient) {
+    constructor(@inject(WorkspaceClient) protected readonly wsClient: WorkspaceClient) {
     }
 
-    async getUrl(serverName: string): Promise<string> {
+    public async getUrl(serverName: string): Promise<string> {
         const remoteTermServer = await this.wsClient.findRemoteServer(serverName);
         return remoteTermServer.url;
     }

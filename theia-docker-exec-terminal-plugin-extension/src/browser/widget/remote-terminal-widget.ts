@@ -12,7 +12,8 @@ import * as Xterm from 'xterm';
 import { ThemeService } from "@theia/core/lib/browser/theming";
 import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
 import { Deferred } from "@theia/core/lib/common/promise-util";
-import { IBaseTerminalServer, ResizeParam } from "../server-definition/base-terminal-protocol";
+import { ResizeParam, IBaseTerminalServer } from "../server-definition/base-terminal-protocol";
+import { IBaseTerminalServerProxyProvider } from "../server-definition/terminal-proxy-provider";
 
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/fit/fit'));
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/attach/attach'));
@@ -70,11 +71,13 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     protected waitForResized = new Deferred<void>();
     protected waitForTermOpened = new Deferred<void>();
 
+    private termServer: IBaseTerminalServer;
+
     constructor(
         @inject(WebSocketConnectionProvider) protected readonly webSocketConnectionProvider: WebSocketConnectionProvider,
         @inject(RemoteTerminalWidgetOptions) protected readonly options: RemoteTerminalWidgetOptions,
         @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
-        @inject(IBaseTerminalServer) protected readonly termServer: IBaseTerminalServer,
+        @inject("IBaseTerminalServerProxyProvider") protected readonly termServerProvider: IBaseTerminalServerProxyProvider,
         @inject(ILogger) protected readonly logger: ILogger
     ) {
         super();
@@ -218,6 +221,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
                 rows: this.rows
             };
             console.log("terminal-id=" + resizeParam.id);
+
             this.termServer.resize(resizeParam);
         });
     }
@@ -244,8 +248,31 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
                 tty: true
             };
 
+            //const termEndPoint: string = await this.termApiEndPointProvider();
+            // let n: number = await new Promise<number>( (resolve, reject) => {
+            //     this.termServerProvider()
+            //     .then(termServer => {
+            //         resolve(termServer.create(machineExec))
+            //     })
+            //     .catch(err => {
+            //         reject(err);
+            //         console.log("some err " + err );
+            //     });
+            // });
+            // console.log("id of the terminal is " + n);
+            
+            // this.termServerProvider().then(termServer => {
+            //     console.log(server + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            //     console.log("SERRRRRRRRRRRRRRRRR");
+
+            //     this.terminalId = await termServer.create(machineExec);
+            //     console.log("Created: ", this.terminalId)
+            // }).catch(err => {
+            //     console.log("some err " + err );
+            // });
+            this.termServer = await this.termServerProvider.createProxy();
             this.terminalId = await this.termServer.create(machineExec);
-            console.log("Created: ", this.terminalId);
+            console.log("Created: ", this.terminalId)
         } else {
             // this.terminalId = await this.shellTerminalServer.attach(id);
         }
