@@ -4,7 +4,7 @@ import { QuickOpenMode, QuickOpenOptions, WidgetManager } from "@theia/core/lib/
 import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidgetFactoryOptions } from "./remote-terminal-widget";
 import { getRestApi, IWorkspace, IRequestError } from "workspace-client";
 import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
-import { terminalAttachUrl } from "./base-terminal-protocol";
+import { TerminalApiEndPointProvider } from "./workspace/workspace-client";
 
 //todo Global todo. Clean terminal restore information on stop workspace.
 @injectable()
@@ -12,7 +12,9 @@ export class TerminalQuickOpenService {
 
     constructor(@inject(QuickOpenService) private readonly quickOpenService: QuickOpenService,
                 @inject(WidgetManager) private readonly widgetManager: WidgetManager,
-                @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,) {
+                @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
+                @inject("TerminalApiEndPointProvider") protected readonly termApiEndPointProvider: TerminalApiEndPointProvider,
+            ) {
     }
 
     async openTerminal(): Promise<void> {
@@ -36,7 +38,7 @@ export class TerminalQuickOpenService {
             return machineNames;
         }
 
-        const baseUrl = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_API");
+        const baseUrl = "http://172.19.20.22:8080/api";//await this.baseEnvVariablesServer.getEnvValueByKey("CHE_API");
         const restClient = getRestApi({
             baseUrl: baseUrl
         });
@@ -79,14 +81,20 @@ export class TerminalQuickOpenService {
     }
 
     protected async createNewTerminal(machineName: string): Promise<void> {
-        let workspaceId:string = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
-        const widget = <RemoteTerminalWidget>await this.widgetManager.getOrCreateWidget(REMOTE_TERMINAL_WIDGET_FACTORY_ID, <RemoteTerminalWidgetFactoryOptions>{
-            created: new Date().toString(),
-            machineName: machineName,
-            workspaceId: workspaceId,
-            endpoint: terminalAttachUrl
-        });
-        widget.start();
+        try {
+            let workspaceId = <string>await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
+            const termApiEndPoint = <string>await this.termApiEndPointProvider();
+
+            const widget = <RemoteTerminalWidget>await this.widgetManager.getOrCreateWidget(REMOTE_TERMINAL_WIDGET_FACTORY_ID, <RemoteTerminalWidgetFactoryOptions>{
+                created: new Date().toString(),
+                machineName: machineName,
+                workspaceId: workspaceId,
+                endpoint: termApiEndPoint
+            });
+            widget.start();
+        } catch(err) {
+            console.error("Failed to create terminal widget.");
+        }
     }
 }
 

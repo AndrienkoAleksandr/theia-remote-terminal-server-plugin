@@ -1,8 +1,8 @@
 // todo apply context to the server side
 
-const baseTerminalUrl = "terminal:4444"
-export const manageTerminalPath = `${baseTerminalUrl}/connect`;
-export const terminalAttachUrl = `${baseTerminalUrl}/attach`
+export const TERMINAL_SERVER_TYPE = "terminal";
+export const CONNECT_TERMINAL_SEGMENT = "/connect";
+export const ATTACH_TERMINAL_SEGMENT = "/attach";
 
 export interface MachineIdentifier {
     machineName: string,
@@ -30,7 +30,7 @@ export interface ResizeParam extends IdParam {
 export const IBaseTerminalServer = Symbol('IBaseTerminalServer');
 export interface IBaseTerminalServer {
     create(machineExec: MachineExec): Promise<number>;
-    // attach(id :number): Promise<number>;
+    attach(id: IdParam): Promise<number>;
     resize(resizeParam: ResizeParam): Promise<void>;
     kill(id: IdParam): Promise<void>;
     get(id :IdParam): Promise<MachineExec>;

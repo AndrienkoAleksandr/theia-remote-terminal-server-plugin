@@ -8,9 +8,9 @@ import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminal
 import { ContainerModule, Container } from "inversify";
 import { WidgetFactory, ApplicationShell } from '@theia/core/lib/browser';
 import { TerminalQuickOpenService } from "./terminal-quick-open";
-import { IBaseTerminalServer, manageTerminalPath } from './base-terminal-protocol';
-import { } from './remote'
-import { RemoteWebSocketConnectionProvider } from './remote-connection'
+import { } from './remote';
+import { RemoteWebSocketConnectionProvider } from './remote-connection';
+import { WorkspaceClient, TerminalApiEndPointProvider } from './workspace/workspace-client';
 
 export default new ContainerModule(bind => {
 
@@ -46,8 +46,20 @@ export default new ContainerModule(bind => {
         }
     }));
 
-    bind(IBaseTerminalServer).toDynamicValue(ctx => {
-        const connection = ctx.container.get(RemoteWebSocketConnectionProvider);
-        return connection.createProxy<IBaseTerminalServer>(manageTerminalPath);
-    }).inSingletonScope();
+    bind(WorkspaceClient).toSelf().inSingletonScope();
+
+    bind<TerminalApiEndPointProvider>("TerminalApiEndPointProvider").toProvider<string>((context) => {
+        return () => {
+            return new Promise<string>((resolve, reject) => {
+                let workspaceClient = context.container.get(WorkspaceClient);
+
+                workspaceClient.findTerminalServer().then(server => {
+                    resolve(server.url);
+                }).catch(err => {
+                    console.error("Failed to get remote terminal server ")
+                    reject(err);
+                })
+            });
+        };
+    });
 });

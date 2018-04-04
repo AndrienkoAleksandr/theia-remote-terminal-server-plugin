@@ -8,15 +8,12 @@
 import { inject, injectable } from "inversify";
 import { Disposable, ILogger } from '@theia/core/lib/common';
 import { Widget, BaseWidget, Message, WebSocketConnectionProvider, StatefulWidget, isFirefox } from '@theia/core/lib/browser'; // WebSocketConnectionProvider, StatefulWidget
-// import { IShellTerminalServer } from '../common/shell-terminal-protocol';
-// import { ITerminalServer } from '../common/terminal-protocol';
-// import { IBaseTerminalErrorEvent, IBaseTerminalExitEvent } from '../common/base-terminal-protocol';
-// import { TerminalWatcher } from '../common/terminal-watcher';
 import * as Xterm from 'xterm';
 import { ThemeService } from "@theia/core/lib/browser/theming";
 import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
-import { IBaseTerminalServer, ResizeParam } from "./base-terminal-protocol";
+import { IBaseTerminalServer, ResizeParam, CONNECT_TERMINAL_SEGMENT, ATTACH_TERMINAL_SEGMENT } from "./server-definition/base-terminal-protocol";
 import { Deferred } from "@theia/core/lib/common/promise-util";
+import { RemoteWebSocketConnectionProvider } from "./remote-connection";
 
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/fit/fit'));
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/attach/attach'));
@@ -63,8 +60,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     private rows: number = 40;
     private machineName = "dev-machine";
     private workspaceId: string;
-    // private endpoint: Endpoint;
-    private attacheTerminalEndPoint: string;
+    private termEndPoint: string;
     protected restored = false;
     protected closeOnDispose = true;
 
@@ -75,20 +71,17 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     protected waitForResized = new Deferred<void>();
     protected waitForTermOpened = new Deferred<void>();
 
+    protected termServer: IBaseTerminalServer;
+
     constructor(
-        // @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(WebSocketConnectionProvider) protected readonly webSocketConnectionProvider: WebSocketConnectionProvider,
         @inject(RemoteTerminalWidgetOptions) protected readonly options: RemoteTerminalWidgetOptions,
         @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
-        @inject(IBaseTerminalServer) protected readonly termServer: IBaseTerminalServer,
-        // @inject(IShellTerminalServer) protected readonly shellTerminalServer: ITerminalServer,
-        // @inject(TerminalWatcher) protected readonly terminalWatcher: TerminalWatcher,
-        @inject(ILogger) protected readonly logger: ILogger
+        @inject(ILogger) protected readonly logger: ILogger,
+        @inject(RemoteWebSocketConnectionProvider) protected readonly connection: RemoteWebSocketConnectionProvider
     ) {
         super();
-
-        // this.endpoint = new Endpoint(options.endpoint);
-        this.attacheTerminalEndPoint = options.endpoint;
+        this.termEndPoint = options.endpoint;
         this.machineName = options.machineName;
         this.workspaceId = options.workspaceId;
         this.id = options.id;
@@ -252,6 +245,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
                 tty: true
             };
 
+            this.termServer = this.connection.createProxy<IBaseTerminalServer>(this.termEndPoint + CONNECT_TERMINAL_SEGMENT);
             this.terminalId = await this.termServer.create(machineExec);
             console.log("Created: ", this.terminalId);
         } else {
@@ -295,7 +289,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     }
 
     protected async createWebSocket(pid: string): Promise<WebSocket> {
-        let url = this.attacheTerminalEndPoint + "/" + this.terminalId;
+        let url = this.termEndPoint  + ATTACH_TERMINAL_SEGMENT + "/" + this.terminalId;
         return this.webSocketConnectionProvider.createWebSocket(url, { reconnecting: false });
     }
 
@@ -356,27 +350,12 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     }
 
     protected monitorTerminal(id: number) {
-        // this.toDispose.push(this.terminalWatcher.onTerminalError((event: IBaseTerminalErrorEvent) => {
-        //     if (event.terminalId === id) {
-        //         this.title.label = "<terminal error>";
-        //     }
-        // }));
-
-        // this.toDispose.push(this.terminalWatcher.onTerminalExit((event: IBaseTerminalExitEvent) => {
-        //     if (event.terminalId === id) {
-        //         this.title.label = "<terminated>";
-        //     }
-        // }));
     }
 
-
     protected async connectSocket(id: number) {
-        console.log("try to connect!!!!");
-
         const socket = await this.createWebSocket(id.toString());
 
         socket.onopen = () => {
-            console.log("open!!!!")
             this.term.on("data", data => {
                 socket.send(data);
             });

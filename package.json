@@ -9,6 +9,6 @@
     "lerna": "2.4.0"
   },
   "workspaces": [
-    "theia-docker-exec-terminal-plugin-extension", "browser-app", "electron-app"
+    "theia-docker-exec-terminal-plugin-extension", "browser-app"
   ]
 }
