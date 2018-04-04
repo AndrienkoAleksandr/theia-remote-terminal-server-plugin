@@ -11,9 +11,8 @@
 import { injectable, inject } from "inversify"
 import { QuickOpenService, QuickOpenModel, QuickOpenItem } from '@theia/core/lib/browser/quick-open/';
 import { QuickOpenMode, QuickOpenOptions, WidgetManager } from "@theia/core/lib/browser";
-import { getRestApi, IWorkspace, IRequestError } from "workspace-client";
 import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
-import { TerminalApiEndPointProvider } from "../workspace/workspace-client";
+import { TerminalApiEndPointProvider, WorkspaceClient } from "../workspace/workspace-client";
 import { REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidget, RemoteTerminalWidgetFactoryOptions } from "../terminal-widget/remote-terminal-widget";
 
 //todo Global todo. Clean terminal restore information on stop workspace.
@@ -24,50 +23,21 @@ export class TerminalQuickOpenService {
                 @inject(WidgetManager) private readonly widgetManager: WidgetManager,
                 @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
                 @inject("TerminalApiEndPointProvider") protected readonly termApiEndPointProvider: TerminalApiEndPointProvider,
+                @inject(WorkspaceClient) protected readonly workspaceClient: WorkspaceClient,
             ) {
     }
 
     async openTerminal(): Promise<void> {
-        const workspaceId = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
-        //const cheHost = await this.baseEnvVariablesServer.getEnvValueByKey("CHE_HOST");
+        const items: QuickOpenItem[] = [];
+        const machines = await this.workspaceClient.getListMachines();
 
-        const machines = await this.getListMachines(workspaceId);
         if (machines) {
-            const items: QuickOpenItem[] = machines.map<NewTerminalItem>((machineName, id) => {
-                return new NewTerminalItem(machineName, newTermItemFunc => this.createNewTerminal(newTermItemFunc.machineName));
-            });
-
-            this.open(items, "Select machine to create new terminal");
-        }
-    }
-
-    private async getListMachines(workspaceId: string): Promise<Array<string>> {
-        let machineNames: string[] = [];
-
-        if (!workspaceId) {
-            return machineNames;
+            for (const machineName in machines) {
+                items.push(new NewTerminalItem(machineName, newTermItemFunc => this.createNewTerminal(newTermItemFunc.machineName)));
+            }
         }
 
-        const baseUrl = "http://172.19.20.22:8080/api";//await this.baseEnvVariablesServer.getEnvValueByKey("CHE_API");
-        const restClient = getRestApi({
-            baseUrl: baseUrl
-        });
-
-        return new Promise<string[]>( (resolve, reject) => {
-            restClient.getById<IWorkspace>(workspaceId)
-            .catch((reason: IRequestError) => {
-                console.log("Failed to get workspace by ID: ", workspaceId, "Status code: ", reason.status);
-                reject(reason.message);
-            })
-            .then((workspace: IWorkspace) => {
-                if (workspace.runtime) {
-                   for(let machine in workspace.runtime.machines) {
-                     machineNames.push(machine)
-                   }
-                }
-                resolve(machineNames);
-            });
-        });
+        this.open(items, "Select machine to create new terminal");
     }
 
     private getOpts(placeholder: string, fuzzyMatchLabel: boolean = true):QuickOpenOptions {
@@ -116,7 +86,6 @@ export class NewTerminalItem extends QuickOpenItem {
             ) {
         super({
             label: _machineName,
-            //description: 'e.g. dev-machine'
         });
     }
 
