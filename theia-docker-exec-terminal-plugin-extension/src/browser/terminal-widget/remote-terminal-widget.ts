@@ -249,7 +249,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
             this.terminalId = await this.termServer.create(machineExec);
             console.log("Created: ", this.terminalId);
         } else {
-            // this.terminalId = await this.shellTerminalServer.attach(id);
+            // this.terminalId = await this.termServer.attach({id: id});
         }
 
         /* An error has occurred in the backend.  */

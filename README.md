@@ -1,5 +1,5 @@
-# Hello World Extension Example
-The example of how to build the Theia-based applications with the theia-docker-exec-terminal-plugin-extension.
+# Terminal Exec plugin
+Terminal exec plugin creates multi-machine terminals for Theia inside Eclipse CHE workspaces.
 
 ## Getting started
 

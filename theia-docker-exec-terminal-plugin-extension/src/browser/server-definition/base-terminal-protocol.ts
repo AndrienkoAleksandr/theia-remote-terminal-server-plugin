@@ -41,8 +41,7 @@ export interface ResizeParam extends IdParam {
 export const IBaseTerminalServer = Symbol('IBaseTerminalServer');
 export interface IBaseTerminalServer {
     create(machineExec: MachineExec): Promise<number>;
-    attach(id: IdParam): Promise<number>;
+    // attach(id: IdParam): Promise<number>;
     resize(resizeParam: ResizeParam): Promise<void>;
     kill(id: IdParam): Promise<void>;
-    get(id :IdParam): Promise<MachineExec>;
 }
