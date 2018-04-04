@@ -26,12 +26,12 @@ export class WorkspaceClient {
     }
 
     public async getListMachines(): Promise<{ [attrName: string]: IMachine }> {
-        // let machineNames: { [attrName: string]: IMachine } = {};
+        let machineNames: { [attrName: string]: IMachine } = {};
         const workspaceId = await this.getWorkspaceId();
         const restClient = await this.getRemoteApi();
-        // if (!workspaceId || !restClient) {
-        //     return machineNames;
-        // }
+        if (!workspaceId || !restClient) {
+            return machineNames;
+        }
         return new Promise<{ [attrName: string]: IMachine }>( (resolve, reject) => {
             restClient.getById<IWorkspace>(workspaceId)
             .then((workspace: IWorkspace) => {

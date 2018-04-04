@@ -1,16 +1,15 @@
-import { TheiaDockerExecTerminalPluginCommandContribution, TheiaDockerExecTerminalPluginMenuContribution } from './theia-docker-exec-terminal-plugin-contribution';
 import {
     CommandContribution,
     MenuContribution
-} from "@theia/core/lib/common";
-import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidgetFactoryOptions, RemoteTerminalWidgetOptions } from "./remote-terminal-widget"; 
-
+} from "@theia/core/lib/common"; 
 import { ContainerModule, Container } from "inversify";
-import { WidgetFactory, ApplicationShell } from '@theia/core/lib/browser';
-import { TerminalQuickOpenService } from "./terminal-quick-open";
+import { WidgetFactory, ApplicationShell, Widget } from '@theia/core/lib/browser';
+import { TerminalQuickOpenService } from "./contribution/terminal-quick-open";
 import { } from './remote';
-import { RemoteWebSocketConnectionProvider } from './remote-connection';
 import { WorkspaceClient, TerminalApiEndPointProvider } from './workspace/workspace-client';
+import { TheiaDockerExecTerminalPluginCommandContribution, TheiaDockerExecTerminalPluginMenuContribution } from "./contribution/theia-docker-exec-terminal-plugin-contribution";
+import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidgetFactoryOptions, RemoteTerminalWidgetOptions } from "./terminal-widget/remote-terminal-widget";
+import { RemoteWebSocketConnectionProvider } from "./server-definition/remote-connection";
 
 export default new ContainerModule(bind => {
 
@@ -37,7 +36,7 @@ export default new ContainerModule(bind => {
                 destroyTermOnClose: true,
                 ...options
             });
-            const result = child.get(RemoteTerminalWidget);
+            const result = <Widget>child.get(RemoteTerminalWidget);
 
             const shell = ctx.container.get(ApplicationShell);
             shell.addWidget(result, { area: 'bottom' });

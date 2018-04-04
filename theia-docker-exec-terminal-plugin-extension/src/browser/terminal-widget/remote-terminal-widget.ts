@@ -11,9 +11,9 @@ import { Widget, BaseWidget, Message, WebSocketConnectionProvider, StatefulWidge
 import * as Xterm from 'xterm';
 import { ThemeService } from "@theia/core/lib/browser/theming";
 import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
-import { IBaseTerminalServer, ResizeParam, CONNECT_TERMINAL_SEGMENT, ATTACH_TERMINAL_SEGMENT } from "./server-definition/base-terminal-protocol";
 import { Deferred } from "@theia/core/lib/common/promise-util";
-import { RemoteWebSocketConnectionProvider } from "./remote-connection";
+import { ResizeParam, ATTACH_TERMINAL_SEGMENT, IBaseTerminalServer, CONNECT_TERMINAL_SEGMENT } from "../server-definition/base-terminal-protocol";
+import { RemoteWebSocketConnectionProvider } from "../server-definition/remote-connection";
 
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/fit/fit'));
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/attach/attach'));
