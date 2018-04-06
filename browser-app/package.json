@@ -7,7 +7,7 @@
 
     "@theia/terminal": "0.3.8",
 
-
+    "@theia/workspace": "0.3.8",
     "env-variables-extension": "https://github.com/AndrienkoAleksandr/che-theia-env-variables-plugin.git#temp",
     "theia-docker-exec-terminal-plugin-extension": "0.0.2"
   },

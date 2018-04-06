@@ -297,7 +297,7 @@
     monaco-typescript "^2.3.0"
     typescript-language-server "^0.1.9"
 
-"@theia/workspace@^0.3.8":
+"@theia/workspace@0.3.8", "@theia/workspace@^0.3.8":
   version "0.3.8"
   resolved "https://registry.yarnpkg.com/@theia/workspace/-/workspace-0.3.8.tgz#6d848541ffad77cc50cd2357d7120b1a56396d4e"
   dependencies:

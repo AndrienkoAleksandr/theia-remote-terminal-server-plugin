@@ -14,6 +14,7 @@ import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base
 import { Deferred } from "@theia/core/lib/common/promise-util";
 import { ResizeParam, ATTACH_TERMINAL_SEGMENT, IBaseTerminalServer, CONNECT_TERMINAL_SEGMENT } from "../server-definition/base-terminal-protocol";
 import { RemoteWebSocketConnectionProvider } from "../server-definition/remote-connection";
+import { WorkspaceService } from "@theia/workspace/lib/browser";
 
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/fit/fit'));
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/attach/attach'));
@@ -56,8 +57,8 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
 
     private terminalId: number | undefined;
     private term: Xterm.Terminal;
-    private cols: number = 80;
-    private rows: number = 40;
+    private cols: number;
+    private rows: number;
     private machineName = "dev-machine";
     private workspaceId: string;
     private termEndPoint: string;
@@ -78,7 +79,8 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
         @inject(RemoteTerminalWidgetOptions) protected readonly options: RemoteTerminalWidgetOptions,
         @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
         @inject(ILogger) protected readonly logger: ILogger,
-        @inject(RemoteWebSocketConnectionProvider) protected readonly connection: RemoteWebSocketConnectionProvider
+        @inject(RemoteWebSocketConnectionProvider) protected readonly connection: RemoteWebSocketConnectionProvider,
+        @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
     ) {
         super();
         this.termEndPoint = options.endpoint;
@@ -149,11 +151,9 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
 
     /* Get the font family and size from the CSS custom properties defined in
        the root element.  */
-
     private getCSSPropertiesFromPage(): TerminalCSSProperties {
         /* Helper to look up a CSS property value and throw an error if it's
            not defined.  */
-
         function lookup(props: CSSStyleDeclaration, name: string): string {
             /* There is sometimes an extra space in the front, remove it.  */
             const value = htmlElementProps.getPropertyValue(name).trim();
@@ -288,7 +288,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
         return this.waitForTermOpened.promise;
     }
 
-    protected async createWebSocket(pid: string): Promise<WebSocket> {
+    protected createWebSocket(pid: string): WebSocket {
         let url = this.termEndPoint  + ATTACH_TERMINAL_SEGMENT + "/" + this.terminalId;
         return this.webSocketConnectionProvider.createWebSocket(url, { reconnecting: false });
     }
@@ -352,27 +352,17 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     protected monitorTerminal(id: number) {
     }
 
-    protected async connectSocket(id: number) {
-        const socket = await this.createWebSocket(id.toString());
+    protected connectSocket(id: number) {
+        const socket = this.createWebSocket(id.toString());
 
         socket.onopen = () => {
-            this.term.on("data", data => {
-                socket.send(data);
-            });
-        };
-
-        socket.onmessage = ev => {
-            this.term.write(ev.data);
+            this.term.attach(socket);
+            this.term._initialized = true;
         };
 
         socket.onerror = err => {
             console.error(err);
         };
-
-        socket.onclose = (ev) => {
-            this.close();
-        }
-
         this.toDispose.push(Disposable.create(() =>
             socket.close()
         ));
