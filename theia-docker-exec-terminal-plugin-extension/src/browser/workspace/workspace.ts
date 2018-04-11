@@ -9,7 +9,7 @@
  *   Red Hat, Inc. - initial API and implementation
  */
 import { injectable, inject } from "inversify";
-import { getRestApi, IWorkspace, IRequestError, IRemoteAPI, IServer, IMachine } from "workspace-client";
+import WorkspaceClient, { IWorkspace, IRequestError, IRemoteAPI, IServer, IMachine } from "@eclipse-che/workspace-client";
 import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
 import { TERMINAL_SERVER_TYPE } from "../server-definition/base-terminal-protocol";
 
@@ -18,7 +18,7 @@ const TYPE: string = "type";
 export type TerminalApiEndPointProvider = () => Promise<string>;
 
 @injectable()
-export class WorkspaceClient {
+export class Workspace {
 
     private api: IRemoteAPI;
 
@@ -72,15 +72,14 @@ export class WorkspaceClient {
         return await this.baseEnvVariablesServer.getEnvValueByKey("CHE_WORKSPACE_ID");
     }
 
-    // TODO
-    // public async getWsMasterApiEndPoint() {
-    //     return await this.baseEnvVariablesServer.getEnvValueByKey("CHE_API_EXTERNAL_URL");
-    // }
+    public async getWsMasterApiEndPoint(): Promise<string> {
+        return await this.baseEnvVariablesServer.getEnvValueByKey("CHE_API_EXTERNAL_URL");
+    }
 
     private async getRemoteApi(): Promise<IRemoteAPI> {
         if (!this.api) {
-            const baseUrl = "http://172.19.20.22:8080/api"; //todo await getWsMasterApiEndPoint();
-            this.api = getRestApi({
+            const baseUrl = await this.getWsMasterApiEndPoint();
+            this.api = WorkspaceClient.getRestApi({
                 baseUrl: baseUrl
             });
         }

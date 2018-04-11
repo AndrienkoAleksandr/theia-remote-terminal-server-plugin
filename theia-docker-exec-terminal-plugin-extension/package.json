@@ -20,7 +20,7 @@
     "@theia/workspace": "^0.3.8",
     "env-variables-extension": "https://github.com/AndrienkoAleksandr/che-theia-env-variables-plugin.git#temp",
     "xterm": "^3.0.1",
-    "workspace-client": "https://github.com/akurinnoy/workspace-client"
+    "@eclipse-che/workspace-client": "0.0.1-20180411"
   },
   "license": "EPL-1.0",
   "devDependencies": {

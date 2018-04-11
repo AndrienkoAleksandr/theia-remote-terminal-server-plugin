@@ -12,7 +12,7 @@ import { injectable, inject } from "inversify"
 import { QuickOpenService, QuickOpenModel, QuickOpenItem } from '@theia/core/lib/browser/quick-open/';
 import { QuickOpenMode, QuickOpenOptions, WidgetManager } from "@theia/core/lib/browser";
 import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
-import { TerminalApiEndPointProvider, WorkspaceClient } from "../workspace/workspace-client";
+import { TerminalApiEndPointProvider, Workspace } from "../workspace/workspace";
 import { REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidget, RemoteTerminalWidgetFactoryOptions } from "../terminal-widget/remote-terminal-widget";
 
 //todo Global todo. Clean terminal restore information on stop workspace.
@@ -23,13 +23,13 @@ export class TerminalQuickOpenService {
                 @inject(WidgetManager) private readonly widgetManager: WidgetManager,
                 @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
                 @inject("TerminalApiEndPointProvider") protected readonly termApiEndPointProvider: TerminalApiEndPointProvider,
-                @inject(WorkspaceClient) protected readonly workspaceClient: WorkspaceClient,
+                @inject(Workspace) protected readonly workspace: Workspace,
             ) {
     }
 
     async openTerminal(): Promise<void> {
         const items: QuickOpenItem[] = [];
-        const machines = await this.workspaceClient.getListMachines();
+        const machines = await this.workspace.getListMachines();
 
         if (machines) {
             for (const machineName in machines) {

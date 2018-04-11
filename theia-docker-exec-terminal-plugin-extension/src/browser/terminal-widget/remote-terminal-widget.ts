@@ -71,6 +71,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
 
     protected waitForResized = new Deferred<void>();
     protected waitForTermOpened = new Deferred<void>();
+    protected waitForTermAttached = new Deferred<void>();
 
     protected termServer: IBaseTerminalServer;
 
@@ -218,8 +219,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
                 cols: this.cols,
                 rows: this.rows
             };
-            console.log("terminal-id=" + resizeParam.id);
-            this.termServer.resize(resizeParam);
+            this.waitForTermAttached.promise.then(() => this.termServer.resize(resizeParam));
         });
     }
 
@@ -357,6 +357,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
 
         socket.onopen = () => {
             this.term.attach(socket);
+            this.waitForTermAttached.resolve();
             this.term._initialized = true;
         };
 
