@@ -230,6 +230,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
      */
     public async start(id?: number): Promise<void> {
         await this.waitForResized.promise;
+        this.termServer = this.connection.createProxy<IBaseTerminalServer>(this.termEndPoint + CONNECT_TERMINAL_SEGMENT);
         if (id === undefined) {
             console.log("Try to create new terminal!!!");
 
@@ -245,11 +246,10 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
                 tty: true
             };
 
-            this.termServer = this.connection.createProxy<IBaseTerminalServer>(this.termEndPoint + CONNECT_TERMINAL_SEGMENT);
             this.terminalId = await this.termServer.create(machineExec);
             console.log("Created: ", this.terminalId);
         } else {
-            // this.terminalId = await this.termServer.attach({id: id});
+            this.terminalId = await this.termServer.check({id: id});
         }
 
         /* An error has occurred in the backend.  */
@@ -373,7 +373,7 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
         /* Close the backend terminal only when explicitly closing the terminal
          * a refresh for example won't close it.  */
         if (this.closeOnDispose === true && this.terminalId !== undefined) {
-            this.termServer.kill({"id": this.terminalId});
+            // do nothing, server side doesn't support kill exec.
         }
         super.dispose();
     }
