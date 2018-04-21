@@ -15,7 +15,6 @@ import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base
 import { TerminalApiEndPointProvider, Workspace } from "../workspace/workspace";
 import { REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidget, RemoteTerminalWidgetFactoryOptions } from "../terminal-widget/remote-terminal-widget";
 
-//todo Global todo. Clean terminal restore information on stop workspace.
 @injectable()
 export class TerminalQuickOpenService {
 
@@ -73,7 +72,7 @@ export class TerminalQuickOpenService {
             });
             widget.start();
         } catch(err) {
-            console.error("Failed to create terminal widget.");
+            console.error("Failed to create terminal widget. Cause: ", err);
         }
     }
 }

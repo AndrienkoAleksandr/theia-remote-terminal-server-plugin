@@ -10,11 +10,9 @@ import { Disposable, ILogger } from '@theia/core/lib/common';
 import { Widget, BaseWidget, Message, WebSocketConnectionProvider, StatefulWidget, isFirefox } from '@theia/core/lib/browser'; // WebSocketConnectionProvider, StatefulWidget
 import * as Xterm from 'xterm';
 import { ThemeService } from "@theia/core/lib/browser/theming";
-import { IBaseEnvVariablesServer } from "env-variables-extension/lib/common/base-env-variables-protocol";
 import { Deferred } from "@theia/core/lib/common/promise-util";
-import { ResizeParam, ATTACH_TERMINAL_SEGMENT, IBaseTerminalServer, CONNECT_TERMINAL_SEGMENT } from "../server-definition/base-terminal-protocol";
-import { RemoteWebSocketConnectionProvider } from "../server-definition/remote-connection";
-import { WorkspaceService } from "@theia/workspace/lib/browser";
+import { ResizeParam, ATTACH_TERMINAL_SEGMENT, IBaseTerminalServer } from "../server-definition/base-terminal-protocol";
+import { TerminalProxyCreatorProvider, TerminalProxyCreator } from "../server-definition/terminal-proxy-creator";
 
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/fit/fit'));
 Xterm.Terminal.applyAddon(require('xterm/lib/addons/attach/attach'));
@@ -78,10 +76,8 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
     constructor(
         @inject(WebSocketConnectionProvider) protected readonly webSocketConnectionProvider: WebSocketConnectionProvider,
         @inject(RemoteTerminalWidgetOptions) protected readonly options: RemoteTerminalWidgetOptions,
-        @inject(IBaseEnvVariablesServer) protected readonly baseEnvVariablesServer: IBaseEnvVariablesServer,
         @inject(ILogger) protected readonly logger: ILogger,
-        @inject(RemoteWebSocketConnectionProvider) protected readonly connection: RemoteWebSocketConnectionProvider,
-        @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
+        @inject("TerminalProxyCreatorProvider") protected readonly termProxyCreatorProvider: TerminalProxyCreatorProvider,
     ) {
         super();
         this.termEndPoint = options.endpoint;
@@ -230,7 +226,13 @@ export class RemoteTerminalWidget extends BaseWidget implements StatefulWidget {
      */
     public async start(id?: number): Promise<void> {
         await this.waitForResized.promise;
-        this.termServer = this.connection.createProxy<IBaseTerminalServer>(this.termEndPoint + CONNECT_TERMINAL_SEGMENT);
+        try {
+            const termProxyCreator = <TerminalProxyCreator>await this.termProxyCreatorProvider()
+            this.termServer = termProxyCreator.create();
+        } catch (err) {
+            this.logger.error("Failed to create terminal server proxy. Cause: ", err);
+            return;
+        }
         if (id === undefined) {
             console.log("Try to create new terminal!!!");
 

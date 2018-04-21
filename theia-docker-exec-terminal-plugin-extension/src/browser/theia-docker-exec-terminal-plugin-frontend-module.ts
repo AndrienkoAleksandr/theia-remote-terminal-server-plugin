@@ -10,6 +10,7 @@ import { Workspace, TerminalApiEndPointProvider } from './workspace/workspace';
 import { TheiaDockerExecTerminalPluginCommandContribution, TheiaDockerExecTerminalPluginMenuContribution } from "./contribution/theia-docker-exec-terminal-plugin-contribution";
 import { RemoteTerminalWidget, REMOTE_TERMINAL_WIDGET_FACTORY_ID, RemoteTerminalWidgetFactoryOptions, RemoteTerminalWidgetOptions } from "./terminal-widget/remote-terminal-widget";
 import { RemoteWebSocketConnectionProvider } from "./server-definition/remote-connection";
+import { TerminalProxyCreator, TerminalProxyCreatorProvider } from "./server-definition/terminal-proxy-creator";
 
 export default new ContainerModule(bind => {
 
@@ -18,6 +19,8 @@ export default new ContainerModule(bind => {
 
     bind(TerminalQuickOpenService).toSelf();
     bind(RemoteWebSocketConnectionProvider).toSelf();
+    bind(TerminalProxyCreator).toSelf().inSingletonScope();
+    bind(Workspace).toSelf().inSingletonScope();
 
     bind(RemoteTerminalWidget).toSelf().inTransientScope();
 
@@ -45,8 +48,6 @@ export default new ContainerModule(bind => {
         }
     }));
 
-    bind(Workspace).toSelf().inSingletonScope();
-
     bind<TerminalApiEndPointProvider>("TerminalApiEndPointProvider").toProvider<string>((context) => {
         return () => {
             return new Promise<string>((resolve, reject) => {
@@ -55,10 +56,25 @@ export default new ContainerModule(bind => {
                 workspace.findTerminalServer().then(server => {
                     resolve(server.url);
                 }).catch(err => {
-                    console.error("Failed to get remote terminal server ")
+                    console.error("Failed to get remote terminal server api end point url. Cause: ", err);
                     reject(err);
                 })
             });
         };
-    });
+    })
+
+    bind<TerminalProxyCreatorProvider>("TerminalProxyCreatorProvider").toProvider<TerminalProxyCreator>((context) => {
+        return () => {
+            return new Promise<TerminalProxyCreator>((resolve, reject) => {
+                let provider = context.container.get<TerminalApiEndPointProvider>("TerminalApiEndPointProvider");
+                provider().then(url => {
+                    context.container.bind("term-api-end-point").toConstantValue(url);
+                    resolve(context.container.get(TerminalProxyCreator));
+                }).catch(err => {
+                    console.log("Failed get terminal proxy. Cause: ", err);
+                    reject(err);
+                });
+            });
+        };
+    })
 });
